@@ -11,6 +11,7 @@ AUTOMAKE_OPTIONS = subdir-objects
 
 bin_PROGRAMS = tacc
 tacc_SOURCES = tacc.c
+tacc_MANS = tacc.1
 tacc_LDADD = libtac.la
 tacc_CFLAGS = $(AM_CFLAGS) -I $(top_srcdir)/libtac/include
 
