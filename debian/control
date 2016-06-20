@@ -1,25 +1,35 @@
 Source: libpam-tacplus
 Section: admin
 Priority: extra
-Maintainer: Jeroen Nijhof <jeroen@jeroennijhof.nl>
-Build-Depends: debhelper (>= 9), libpam-dev, dh-autoreconf, autoconf-archive
-Standards-Version: 3.9.5
-Homepage: https://github.com/jeroennijhof/pam_tacplus
+Build-Depends: debhelper (>= 9), libpam-dev, dh-autoreconf, autoconf-archive, libaudit-dev,
+    libtacplus-map-dev
+Maintainer: devsupport <devsupport@cumulusnetworks.com>
+Standards-Version: 3.9.6
+#Homepage: https://github.com/jeroennijhof/pam_tacplus
+Homepage: http://www.cumulusnetworks.com
 
 Package: libpam-tacplus
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, libpam-runtime, libtac2
+Depends: ${shlibs:Depends}, ${misc:Depends}, libpam-runtime, libtac2, libtacplus-map1
 Description: PAM module for using TACACS+ as an authentication service
  This PAM module support authentication, authorization (account management) and
  accounting (session management) performed using TACACS+ protocol designed by
  Cisco.
 
+Package: libpam-tacplus-dev
+Section: libdevel
+Architecture: any
+Depends: ${misc:Depends}, libpam-tacplus (= ${binary:Version}), libc6-dev|libc-dev
+Description: Development files for PAM module for using TACACS+ authentication
+ Provides header files for development with libpam-tacplus
+
 Package: libtac2
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}, libaudit1
 Description: TACACS+ protocol library 
  This library implemenents the fundamentls of the TACACS+ protocol and supports
- authentication, authorization (account management) and accounting (session management).
+ authentication, authorization (account management) and accounting (session
+ management).
 
 Package: libtac2-bin
 Architecture: any
@@ -34,3 +44,4 @@ Depends: ${misc:Depends}, libtac2 (= ${binary:Version}), libc6-dev|libc-dev
 Description: Development files for TACACS+ protocol library 
  Contains C header files and development files for libtac, a TACACS+ protocol
  implementation.
+

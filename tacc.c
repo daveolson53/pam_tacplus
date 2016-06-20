@@ -61,8 +61,8 @@ void showusage(char *argv0);
 unsigned long getservername(char *serv);
 void showusage(char *progname);
 void showversion(char *progname);
-void authenticate(const struct addrinfo *tac_server, const char *tac_secret,
-		const char *user, const char *pass, const char *tty, const char *remote_addr);
+void authenticate(struct addrinfo *tac_server, const char *tac_secret,
+		const char *user, char *pass, char *tty, char *remote_addr);
 void timeout_handler(int signum);
 
 #define	EXIT_OK		0
@@ -277,7 +277,7 @@ int main(int argc, char **argv) {
 		tac_add_attrib(&attr, "service", service);
 		tac_add_attrib(&attr, "protocol", protocol);
 
-		tac_fd = tac_connect_single(tac_server, tac_secret, NULL, 60);
+		tac_fd = tac_connect_single(tac_server, tac_secret, NULL);
 		if (tac_fd < 0) {
 			if (!quiet)
 				printf("Error connecting to TACACS+ server: %m\n");
@@ -309,13 +309,17 @@ int main(int argc, char **argv) {
 		struct tac_attrib *attr = NULL;
 		sprintf(buf, "%lu", time(0));
 		tac_add_attrib(&attr, "start_time", buf);
+#if defined(HAVE_OPENSSL_RAND_H) && defined(HAVE_LIBCRYPTO)
 		RAND_pseudo_bytes((unsigned char *) &task_id, sizeof(task_id));
+#else
+        task_id = tac_magic();
+#endif
 		sprintf(buf, "%hu", task_id);
 		tac_add_attrib(&attr, "task_id", buf);
 		tac_add_attrib(&attr, "service", service);
 		tac_add_attrib(&attr, "protocol", protocol);
 
-		tac_fd = tac_connect_single(tac_server, tac_secret, NULL, 60);
+		tac_fd = tac_connect_single(tac_server, tac_secret, NULL);
 		if (tac_fd < 0) {
 			if (!quiet)
 				printf("Error connecting to TACACS+ server: %m\n");
@@ -398,7 +402,7 @@ int main(int argc, char **argv) {
 		sprintf(buf, "%hu", task_id);
 		tac_add_attrib(&attr, "task_id", buf);
 
-		tac_fd = tac_connect_single(tac_server, tac_secret, NULL, 60);
+		tac_fd = tac_connect_single(tac_server, tac_secret, NULL);
 		if (tac_fd < 0) {
 			if (!quiet)
 				printf("Error connecting to TACACS+ server: %m\n");
@@ -432,14 +436,14 @@ void sighandler(int sig) {
 	TACDEBUG((LOG_DEBUG, "caught signal %d", sig));
 }
 
-void authenticate(const struct addrinfo *tac_server, const char *tac_secret,
-		const char *user, const char *pass, const char *tty, const char *remote_addr) {
+void authenticate(struct addrinfo *tac_server, const char *tac_secret,
+		const char *user, char *pass, char *tty, char *remote_addr) {
 	int tac_fd;
 	char *msg;
 	int ret;
 	struct areply arep;
 
-	tac_fd = tac_connect_single(tac_server, tac_secret, NULL, 60);
+	tac_fd = tac_connect_single(tac_server, tac_secret, NULL);
 	if (tac_fd < 0) {
 		if (!quiet)
 			printf("Error connecting to TACACS+ server: %m\n");

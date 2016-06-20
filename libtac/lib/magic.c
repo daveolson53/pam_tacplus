@@ -42,11 +42,11 @@ static int magic_initialised = 0;
  *
  * Attempts to compute a random number seed which will not repeat.
  */
-void
-magic_init()
+static void
+tac_magic_init()
 {
     struct stat statbuf;
-    long seed = 0;
+    long seed;
     struct timeval t;
 
     if (magic_initialised)
@@ -56,9 +56,12 @@ magic_init()
     if (!lstat("/dev/urandom", &statbuf) && S_ISCHR(statbuf.st_mode)) {
         int rfd = open("/dev/urandom", O_RDONLY);
         if(rfd >= 0) {
-            int nb_read = read(rfd, &seed, sizeof(seed));
+            if (read(rfd, &seed, sizeof(seed)) < 0)
+                seed = 0;
             close(rfd);
         }
+        else
+            seed = 0;
     }
 
     // fallback
@@ -75,11 +78,11 @@ magic_init()
  * magic - Returns the next magic number.
  */
 u_int32_t
-magic()
+tac_magic()
 {
     static pthread_once_t magic_control = PTHREAD_ONCE_INIT;
     
-    pthread_once(&magic_control, &magic_init);
+    pthread_once(&magic_control, &tac_magic_init);
 
     return (u_int32_t)random();
 }

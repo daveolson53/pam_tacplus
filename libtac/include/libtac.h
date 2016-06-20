@@ -132,7 +132,7 @@ extern int tac_readtimeout_enable;
 extern int tac_timeout;
 
 int tac_connect(struct addrinfo **, char **, int);
-int tac_connect_single(struct addrinfo *, const char *, struct addrinfo *, int);
+int tac_connect_single(struct addrinfo *, const char *, struct addrinfo *);
 char *tac_ntop(const struct sockaddr *);
 
 int tac_authen_send(int, const char *, char *, char *,
@@ -149,9 +149,10 @@ char *tac_acct_flag2str(int);
 int tac_acct_send(int, int, const char *, char *, char *,
     struct tac_attrib *);
 int tac_acct_read(int, struct areply *);
-void *xcalloc(size_t, size_t);
-void *xrealloc(void *, size_t);
-char *xstrcpy(char *, const char *, size_t);
+void *tac_xcalloc(size_t, size_t);
+void *tac_xrealloc(void *, size_t);
+char *tac_xstrcpy(char *, const char *, size_t);
+char *tac_xstrdup(const char *);
 char *_tac_check_header(HDR *, int);
 int tac_author_send(int, const char *, char *, char *,
     struct tac_attrib *);
@@ -161,7 +162,7 @@ void tac_add_attrib_pair(struct tac_attrib **, char *, char,
 int tac_read_wait(int, int, int, int *);
 
 /* magic.c */
-u_int32_t magic(void);
+u_int32_t tac_magic(void);
 
 #ifdef __cplusplus
 }

@@ -54,7 +54,7 @@ int tac_author_send(int fd, const char *user, char *tty, char *r_addr,
     th->encryption=tac_encryption ? TAC_PLUS_ENCRYPTED_FLAG : TAC_PLUS_UNENCRYPTED_FLAG;
 
     TACDEBUG((LOG_DEBUG, "%s: user '%s', tty '%s', rem_addr '%s', encrypt: %s", \
-        __FUNCTION__, user, \
+        __func__, user, \
         tty, r_addr, tac_encryption ? "yes" : "no"))
     
     user_len = (u_char) strlen(user);
@@ -81,7 +81,7 @@ int tac_author_send(int fd, const char *user, char *tty, char *r_addr,
     tb.r_addr_len = r_addr_len;
 
     /* allocate packet */
-    pkt = (u_char *) xcalloc(1, TAC_AUTHOR_REQ_FIXED_FIELDS_SIZE);
+    pkt = (u_char *) tac_xcalloc(1, TAC_AUTHOR_REQ_FIXED_FIELDS_SIZE);
     pkt_len = sizeof(tb);
 
     /* fill attribute length fields */
@@ -89,13 +89,13 @@ int tac_author_send(int fd, const char *user, char *tty, char *r_addr,
     while (a) {
         pktl = pkt_len;
         pkt_len += sizeof(a->attr_len);
-        pkt = (u_char*) xrealloc(pkt, pkt_len);
+        pkt = (u_char*) tac_xrealloc(pkt, pkt_len);
 
         /* bad method: realloc() is allowed to return different pointer
            with each call
         pktp=pkt + pkt_len; 
         pkt_len += sizeof(a->attr_len);
-        pkt = xrealloc(pkt, pkt_len);   
+        pkt = tac_xrealloc(pkt, pkt_len);   
         */
                 
         bcopy(&a->attr_len, pkt + pktl, sizeof(a->attr_len));
@@ -111,14 +111,14 @@ int tac_author_send(int fd, const char *user, char *tty, char *r_addr,
 #define PUTATTR(data, len) \
     pktp = pkt + pkt_len; \
     pkt_len += len; \
-    pkt = xrealloc(pkt, pkt_len); \
+    pkt = tac_xrealloc(pkt, pkt_len); \
     bcopy(data, pktp, len);
 */
 
 #define PUTATTR(data, len) \
     pktl = pkt_len; \
     pkt_len += len; \
-    pkt = (u_char*) xrealloc(pkt, pkt_len); \
+    pkt = (u_char*) tac_xrealloc(pkt, pkt_len); \
     bcopy(data, pkt + pktl, len);
 
     /* fill user and port fields */
@@ -143,7 +143,7 @@ int tac_author_send(int fd, const char *user, char *tty, char *r_addr,
     if (w < TAC_PLUS_HDR_SIZE) {
         TACSYSLOG((LOG_ERR,\
             "%s: short write on header, wrote %d of %d: %m",\
-            __FUNCTION__, w, TAC_PLUS_HDR_SIZE))
+            __func__, w, TAC_PLUS_HDR_SIZE))
         free(pkt);
         free(th);
         return LIBTAC_STATUS_WRITE_ERR;
@@ -157,12 +157,12 @@ int tac_author_send(int fd, const char *user, char *tty, char *r_addr,
     if (w < pkt_len) {
         TACSYSLOG((LOG_ERR,\
             "%s: short write on body, wrote %d of %d: %m",\
-            __FUNCTION__, w, pkt_len))
+            __func__, w, pkt_len))
         ret = LIBTAC_STATUS_WRITE_ERR;
     }
 
     free(pkt);
     free(th);
-    TACDEBUG((LOG_DEBUG, "%s: exit status=%d", __FUNCTION__, ret))
+    TACDEBUG((LOG_DEBUG, "%s: exit status=%d", __func__, ret))
     return ret;
 }

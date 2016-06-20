@@ -25,9 +25,9 @@
 #include "libtac.h"
 
 __BEGIN_DECLS
-extern void *xcalloc(size_t nmemb, size_t size);
-extern void *xrealloc(void *ptr, size_t size);
-extern char *xstrdup(const char *s);
+extern void *tac_xcalloc(size_t nmemb, size_t size);
+extern void *tac_xrealloc(void *ptr, size_t size);
+extern char *tac_xstrdup(const char *s);
 __END_DECLS
 
 #endif

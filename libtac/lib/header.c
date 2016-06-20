@@ -73,7 +73,7 @@ int tac_readtimeout_enable = 0;
 HDR *_tac_req_header(u_char type, int cont_session) {
     HDR *th;
 
-    th=(HDR *) xcalloc(1, TAC_PLUS_HDR_SIZE);
+    th=(HDR *) tac_xcalloc(1, TAC_PLUS_HDR_SIZE);
 
     /* preset some packet options in header */
     th->type=type;
@@ -85,7 +85,7 @@ HDR *_tac_req_header(u_char type, int cont_session) {
 #if defined(HAVE_OPENSSL_RAND_H) && defined(HAVE_LIBCRYPTO)
         RAND_pseudo_bytes((unsigned char *) &session_id, sizeof(session_id));
 #else
-        session_id = magic();
+        session_id = tac_magic();
 #endif
     }
     th->session_id = htonl(session_id);

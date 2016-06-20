@@ -1,8 +1,9 @@
 ###########################################################################
-##
 ## File:        ./Makefile.am
 ## Versions:    $Id: Makefile.am,v 1.3 2010/06/11 12:04:29 j-nijhof Exp $
 ## Created:     2010/06/09
+## Modified 2016
+## Copyright 2015, 2016 Cumulus Networks, Inc.  All rights reserved.
 ##
 ###########################################################################
 
@@ -11,17 +12,26 @@ AUTOMAKE_OPTIONS = subdir-objects
 
 bin_PROGRAMS = tacc
 tacc_SOURCES = tacc.c
-tacc_MANS = tacc.1
-tacc_LDADD = libtac.la
 tacc_CFLAGS = $(AM_CFLAGS) -I $(top_srcdir)/libtac/include
+tacc_LDFLAGS = -L.libs -ltac $(OPENSSL_LIBS)
+dist_man_MANS = tacc.1
 
-libtac_includedir = $(includedir)/libtac
+
+# This applies to all the libs, but it should only be for pam_tacplus.so
+moduledir = @pamdir@
+
+module_LTLIBRARIES = pam_tacplus.la
+lib_LTLIBRARIES = libtac.la
+
+libtac_includedir = $(oldincludedir)/tacplus
+
 libtac_include_HEADERS = \
 libtac/include/tacplus.h \
-libtac/include/libtac.h \
+libtac/include/libtac.h
+
+nodist_libtac_include_HEADERS = \
 libtac/include/cdefs.h
 
-lib_LTLIBRARIES = libtac.la
 libtac_la_SOURCES = \
 libtac/lib/acct_r.c \
 libtac/lib/acct_s.c \
@@ -47,17 +57,20 @@ libtac/lib/xalloc.c \
 libtac/lib/xalloc.h \
 $(libtac_include_HEADERS)
 libtac_la_CFLAGS = $(AM_CFLAGS) -I $(top_srcdir)/libtac/include
-libtac_la_LDFLAGS = -version-info 2:0:0 -shared
+libtac_la_LIBADD = -lpthread $(OPENSSL_LIBS)
+libtac_la_LDFLAGS = -version-info 2:0:0 -shared -Wl,--no-undefined \
+	-export-symbols-regex '^tac_'
 
-moduledir = @pamdir@
-module_LTLIBRARIES = pam_tacplus.la
+
 pam_tacplus_la_SOURCES = pam_tacplus.h \
 pam_tacplus.c \
 support.h \
 support.c
 pam_tacplus_la_CFLAGS = $(AM_CFLAGS) -I $(top_srcdir)/libtac/include
-pam_tacplus_la_LDFLAGS = -module -avoid-version
-pam_tacplus_la_LIBADD = libtac.la
+pam_tacplus_la_LDFLAGS = -module -avoid-version -shared
+pam_tacplus_la_LIBADD = -L.libs -ltac -ltacplus_map -lpam $(OPENSSL_LIBS)
+# no versioning for this, since it's always installed as pam_tacplus.so
+# and not ever used as a link library
 
 EXTRA_DIST = pam_tacplus.spec libtac.pc.in
 if DOC
@@ -70,4 +83,12 @@ MAINTAINERCLEANFILES = Makefile.in config.h.in configure aclocal.m4 \
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libtac.pc
+
+clean-generic:
+	rm -rf autom4te*.cache 
+	rm -f *.rej *.orig *.lang
+
+install-data-hook:
+	${INSTALL} -d $(DESTDIR)$(sysconfdir)
+	${INSTALL} -m 600 tacplus_servers $(DESTDIR)$(sysconfdir)
 

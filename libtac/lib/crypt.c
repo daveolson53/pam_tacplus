@@ -30,6 +30,9 @@
 # include <openssl/md5.h>
 #else
 # include "md5.h"
+# ifndef MD5_LBLOCK /*  should be always, since it's in openssl */
+#  define MD5_LBLOCK MD5_LEN
+# endif 
 #endif
 
 /* Produce MD5 pseudo-random pad for TACACS+ encryption.
@@ -47,8 +50,8 @@ u_char *_tac_md5_pad(int len, HDR *hdr)  {
     n = (int)(len/16)+1;  /* number of MD5 runs */
     bufsize = sizeof(hdr->session_id) + strlen(tac_secret) + sizeof(hdr->version)
         + sizeof(hdr->seq_no) + MD5_LBLOCK + 10;
-    buf = (u_char *) xcalloc(1, bufsize);
-    pad = (u_char *) xcalloc(n, MD5_LBLOCK);
+    buf = (u_char *) tac_xcalloc(1, bufsize);
+    pad = (u_char *) tac_xcalloc(n, MD5_LBLOCK);
 
     for (i=0; i<n; i++) {
         /* MD5_1 = MD5{session_id, secret, version, seq_no}
@@ -71,9 +74,15 @@ u_char *_tac_md5_pad(int len, HDR *hdr)  {
             bp+=MD5_LBLOCK;
         }
   
+#if defined(HAVE_OPENSSL_MD5_H) && defined(HAVE_LIBCRYPTO)
         MD5_Init(&mdcontext);
         MD5_Update(&mdcontext, buf, bp);
         MD5_Final(pad+pp, &mdcontext);
+#else
+        MD5Init(&mdcontext);
+        MD5Update(&mdcontext, buf, bp);
+        MD5Final(pad+pp, &mdcontext);
+#endif
    
         pp += MD5_LBLOCK;
     }
@@ -100,6 +109,6 @@ void _tac_crypt(u_char *buf, HDR *th, int length) {
   
         free(pad);
     } else {
-        TACSYSLOG((LOG_WARNING, "%s: using no TACACS+ encryption", __FUNCTION__))
+        TACSYSLOG((LOG_WARNING, "%s: using no TACACS+ encryption", __func__))
     }
 }    /* _tac_crypt */

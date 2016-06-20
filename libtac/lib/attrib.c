@@ -43,13 +43,13 @@ void tac_add_attrib_pair(struct tac_attrib **attr, char *name, char sep, char *v
     if (total_len > 255) {
         TACSYSLOG((LOG_WARNING,\
             "%s: attribute `%s' total length exceeds 255 characters, skipping",\
-            __FUNCTION__, name))
+            __func__, name))
         return;
     }
     
     /* initialize the list if application passed us a null pointer */
     if(*attr == NULL) {
-        *attr = (struct tac_attrib *) xcalloc(1, sizeof(struct tac_attrib));
+        *attr = (struct tac_attrib *) tac_xcalloc(1, sizeof(struct tac_attrib));
         a = *attr;
     } else {
         /* find the last allocated block */
@@ -57,7 +57,8 @@ void tac_add_attrib_pair(struct tac_attrib **attr, char *name, char sep, char *v
         while(a->next != NULL)
             a = a->next; /* a holds last allocated block */
 
-        a->next = (struct tac_attrib *) xcalloc(1, sizeof(struct tac_attrib)); 
+        a->next = (struct tac_attrib *) tac_xcalloc(1,
+            sizeof(struct tac_attrib)); 
         a = a->next; /* set current block pointer to the new one */
     }
 
@@ -67,7 +68,7 @@ void tac_add_attrib_pair(struct tac_attrib **attr, char *name, char sep, char *v
 
     /* fill the block */
     a->attr_len=total_len;
-    a->attr = (char *) xcalloc(1, total_len+1);
+    a->attr = (char *) tac_xcalloc(1, total_len+1);
     bcopy(name, a->attr, l1);    /* paste name */
     *(a->attr+l1)=sep;           /* insert seperator "[=*]" */
     if (value != NULL) {

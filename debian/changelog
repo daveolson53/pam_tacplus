@@ -1,3 +1,21 @@
+libpam-tacplus (1.4.0-2) unstable; urgency=medium
+  * Non-maintainer upload
+  * Added the runtime config capability to include another file, so that
+    the tacacs servers are only listed in a single place.  Ship using
+    /etc/tacplus_servers as an include file, and use it in the pam sample config
+  * Modified debian packaging to create separate libtac package.
+  * Modified to build dev packages for use in other packages
+  * Renamed external libtac functions to all have a tac_ prefix, to avoid
+    name collision with other programs (the x*alloc family was an issue, in
+    particular).
+
+ -- Dave Olson <olson@cumulusnetworks.com>  Tue, 21 Jun 2016 11:03:21 -0700
+
+libpam-tacplus (1.4.0-1) unstable; urgency=medium
+  * use OpenSSL for MD5 and random numbers
+
+ -- Paweł Krawczyk <pawel.krawczyk@hush.com>  Tue, 3 May 2016 12:51:09 +0100
+
 libpam-tacplus (1.3.8-2) unstable; urgency=low
 
   * Added postinst and prerm scripts for pam-auth-update. Closes: #739274

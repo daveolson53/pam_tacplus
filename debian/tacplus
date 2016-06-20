@@ -3,13 +3,13 @@ Default: yes
 Priority: 257
 Auth-Type: Primary
 Auth:
-	sufficient			pam_tacplus.so
+	[default=1 success=ignore] pam_succeed_if.so uid > 1000 quiet
+	[authinfo_unavail=ignore success=done default=ignore]	pam_tacplus.so include=/etc/tacplus_servers login=login protocol=ssh service=shell
 Account-Type: Primary
 Account:
-	sufficient			pam_tacplus.so
-Password-Type: Primary
-Password:
- 	sufficient			pam_tacplus.so
+	[default=1 success=ignore] pam_succeed_if.so uid > 1000 quiet
+	[authinfo_unavail=ignore success=done default=ignore]	pam_tacplus.so include=/etc/tacplus_servers login=login protocol=ssh service=shell
 Session-Type: Additional
 Session:
-	optional			pam_tacplus.so
+	[default=1 success=ignore] pam_succeed_if.so uid > 1000 quiet
+	[authinfo_unavail=ignore success=done default=ignore] pam_tacplus.so include=/etc/tacplus_servers login=login protocol=ssh service=shell

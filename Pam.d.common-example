@@ -1,0 +1,48 @@
+
+These are example changes for the /etc/pam.d/common-* files to use pam_tacplus
+in the enhanced mode.  I have have been unsuccessful (on ubuntu 14 or on debian
+wheezy or jessie), in using pam-auth-update files, because they get inserted at
+the incorrect locations.  You also need to be sure that these changes do not
+apply to su and sudo, because they must not reset the auid and sessionid.
+
+For all of these, debug is optional (but you'll probably want it during setup, unless you
+are really lucky and everything just works).
+
+I've done all my testing against the linux tacacs+ server (debian wheezy package) with
+nothing special in the configuration, other than adding some users.
+
+I recommend not using pam_loginuid.so with pam_tacplus, unless you have your
+kernel set to make the loginuid immutable (indicated by auditctl supporting
+the -loginuid-immutable option.
+
+The file debian/tacplus is appropriate for use with pam-auth-update.
+
+It's setup to only try tacacs for "user" accounts.  If you change that (here
+in the source, or on an end-system), be sure to do something to at least allow
+root (uid==0) to login when the tacacs server is down or not reachable.
+The rules are set so that if tacacs doesn't succeed it fall through to normal
+unix method.
+
+The reason we check > 1000 is normally linux non-privileged userid's start
+at 1000, and it's reasonable to assume a system has at least one non-privileged
+local user, and not checking the local user is a performance win.
+Change to suit your conventions.  To minimize system impact, what
+you really should use is the range of uid's for your tacacs0..15 accounts
+
+	auth [default=1 success=ignore] pam_succeed_if.so uid > 1000 quiet
+	auth [authinfo_unavail=ignore success=done default=ignore]	pam_tacplus.so include=/etc/tacplus_servers login=login protocol=ssh service=shell
+
+	account [default=1 success=ignore] pam_succeed_if.so uid > 1000 quiet
+	account [authinfo_unavail=ignore success=done default=ignore]	pam_tacplus.so include=/etc/tacplus_servers login=login protocol=ssh service=shell
+
+	session [default=1 success=ignore] pam_succeed_if.so uid > 1000 quiet
+	session [authinfo_unavail=ignore success=done default=ignore] pam_tacplus.so include=/etc/tacplus_servers login=login protocol=ssh service=shell
+
+/etc/tacplus_servers will have the list of tacacs+ servers and their shared secret. E.g:
+=====
+secret=tacacskey
+server=192.168.1.1
+=====
+
+It can also have any other options common to other libraries or clients that
+want to parse it, such as debugging options.

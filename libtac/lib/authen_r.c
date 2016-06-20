@@ -50,7 +50,7 @@ int tac_authen_read(int fd, struct areply *re) {
     if (tac_readtimeout_enable &&
         tac_read_wait(fd,tac_timeout*1000,TAC_PLUS_HDR_SIZE,&timeleft) < 0 ) {
         TACSYSLOG((LOG_ERR,\
-            "%s: reply timeout after %d secs", __FUNCTION__, tac_timeout))
+            "%s: reply timeout after %d secs", __func__, tac_timeout))
         re->status=LIBTAC_STATUS_READ_TIMEOUT;
         free(tb);
         return re->status;
@@ -59,9 +59,9 @@ int tac_authen_read(int fd, struct areply *re) {
     if (packet_read < TAC_PLUS_HDR_SIZE) {
         TACSYSLOG((LOG_ERR,\
             "%s: short reply header, read %d of %d: %m",\
-            __FUNCTION__,\
-            packet_read, TAC_PLUS_HDR_SIZE))
-        re->status=LIBTAC_STATUS_SHORT_HDR;
+            __func__,\
+            r, TAC_PLUS_HDR_SIZE))
+        re->status=LIBTAC_STATUS_READ_TIMEOUT;
         free(tb);
         return re->status;
     }
@@ -69,7 +69,7 @@ int tac_authen_read(int fd, struct areply *re) {
     /* check the reply fields in header */
     msg = _tac_check_header(&th, TAC_PLUS_AUTHEN);
     if(msg != NULL) {
-        re->msg = xstrdup(msg);
+        re->msg = tac_xstrdup(msg);
         re->status = LIBTAC_STATUS_PROTOCOL_ERR;
         free(tb);
         return re->status;
@@ -80,21 +80,21 @@ int tac_authen_read(int fd, struct areply *re) {
     len_from_header = ntohl(th.datalength);
     if (len_from_header > TAC_PLUS_MAX_PACKET_SIZE) {
         TACSYSLOG((LOG_ERR,\
-            "%s: length declared in the packet %d exceeds max packet size %ld",\
-            __FUNCTION__,\
+            "%s: length declared in the packet %d exceeds max packet size %d",\
+            __func__,\
             len_from_header, TAC_PLUS_MAX_PACKET_SIZE))
         re->status = LIBTAC_STATUS_PROTOCOL_ERR;
         free(tb);
         return re->status;
     }
-    tb = (struct authen_reply *) xcalloc(1, len_from_header);
+    tb = (struct authen_reply *) tac_xcalloc(1, len_from_header);
 
     /* read reply packet body */
     if (tac_readtimeout_enable &&
         tac_read_wait(fd,timeleft,len_from_header,NULL) < 0 ) {
         TACSYSLOG((LOG_ERR,\
-            "%s: reply timeout after %d secs", __FUNCTION__, tac_timeout))
-        re->msg = xstrdup(authen_syserr_msg);
+            "%s: reply timeout after %d secs", __func__, tac_timeout))
+        re->msg = tac_xstrdup(authen_syserr_msg);
         re->status=LIBTAC_STATUS_READ_TIMEOUT;
         free(tb);
         return re->status;
@@ -103,9 +103,9 @@ int tac_authen_read(int fd, struct areply *re) {
     if (r < len_from_header) {
         TACSYSLOG((LOG_ERR,\
             "%s: short reply body, read %d of %d: %m",\
-            __FUNCTION__,\
+            __func__,\
             r, len_from_header))
-        re->msg = xstrdup(authen_syserr_msg);
+        re->msg = tac_xstrdup(authen_syserr_msg);
         re->status = LIBTAC_STATUS_SHORT_BODY;
         free(tb);
         return re->status;
@@ -126,8 +126,8 @@ int tac_authen_read(int fd, struct areply *re) {
     if(len_from_header != len_from_body) {
         TACSYSLOG((LOG_ERR,\
             "%s: inconsistent reply body, incorrect key?",\
-            __FUNCTION__))
-        re->msg = xstrdup(protocol_err_msg);
+            __func__))
+        re->msg = tac_xstrdup(protocol_err_msg);
         re->status = LIBTAC_STATUS_PROTOCOL_ERR;
         free(tb);
         return re->status;
@@ -137,7 +137,7 @@ int tac_authen_read(int fd, struct areply *re) {
     re->status = r = tb->status;
 
     if (0 < tb->msg_len) {
-        msg = xcalloc(tb->msg_len + 1, sizeof(char));
+        msg = tac_xcalloc(tb->msg_len + 1, sizeof(char));
         memset(msg, 0, (tb->msg_len + 1));
         memcpy(msg, (char*)tb + sizeof(struct authen_reply), tb->msg_len);
 
@@ -146,14 +146,14 @@ int tac_authen_read(int fd, struct areply *re) {
 
     /* server authenticated username and password successfully */
     if (r == TAC_PLUS_AUTHEN_STATUS_PASS) {
-        TACDEBUG((LOG_DEBUG, "%s: authentication ok", __FUNCTION__))
+        TACDEBUG((LOG_DEBUG, "%s: authentication ok", __func__))
         free(tb);
         return re->status;
     }
         
     /* server ask for continue packet with password */
     if (r == TAC_PLUS_AUTHEN_STATUS_GETPASS) {
-        TACDEBUG((LOG_DEBUG, "%s: continue packet with password needed", __FUNCTION__))
+        TACDEBUG((LOG_DEBUG, "%s: continue packet with password needed", __func__))
         free(tb);
         return re->status;
     }
@@ -169,7 +169,7 @@ int tac_authen_read(int fd, struct areply *re) {
     }
 
     TACDEBUG((LOG_DEBUG, "%s: authentication failed, server reply status=%d",
-        __FUNCTION__, r))
+        __func__, r))
 
     free(tb);
     return re->status;

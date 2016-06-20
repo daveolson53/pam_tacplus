@@ -32,11 +32,8 @@ LT_INIT([disable-static])
 AM_PROG_CC_C_O
 
 dnl --------------------------------------------------------------------
-dnl Checks for libraries.
-AC_CHECK_LIB(pam, pam_start)
-AC_CHECK_LIB(tac, tac_connect)
-AC_CHECK_LIB(crypto, MD5_Init)
-AC_CHECK_LIB(crypto, RAND_pseudo_bytes)
+dnl Checks for libraries, but don't use -lpam for everything
+AC_CHECK_LIB(pam, pam_start, HAVE_LIBPAM=1)
 AC_CHECK_LIB(util, logwtmp)
 
 case "$host" in
@@ -47,7 +44,7 @@ esac
 dnl --------------------------------------------------------------------
 dnl Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS([arpa/inet.h fcntl.h netdb.h netinet/in.h stdlib.h string.h strings.h sys/socket.h sys/time.h syslog.h unistd.h openssl/md5.h openssl/rand.h])
+AC_CHECK_HEADERS([arpa/inet.h fcntl.h netdb.h netinet/in.h stdlib.h string.h strings.h sys/socket.h sys/time.h syslog.h unistd.h])
 AC_CHECK_HEADER(security/pam_appl.h, [], [AC_MSG_ERROR([PAM libraries missing. Install with "yum install pam-devel" or "apt-get install libpam-dev".])] )
 
 dnl --------------------------------------------------------------------
@@ -55,6 +52,10 @@ dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
 AC_TYPE_SIZE_T
 AC_HEADER_TIME
+
+AC_ENABLE_SHARED(yes)
+AC_ENABLE_STATIC(no)
+AC_DISABLE_STATIC
 
 AC_ARG_ENABLE(am-ldcflags, AS_HELP_STRING([--disable-am-ldcflags], [do not add various 'AM_CFLAGS/AM_LDFLAGS']))
 if test "x$enable_am_ldcflags" != "xno"; then
@@ -90,6 +91,20 @@ AC_SUBST(pamdir)
 
 AC_ARG_ENABLE(doc, AS_HELP_STRING([--disable-doc], [do not build docs]))
 AM_CONDITIONAL(DOC, test "x$enable_doc" != "xno")
+
+AC_ARG_ENABLE(openssl,[  --disable-openssl  disables OpenSSL random number, etc],
+   [
+      if test "x$enableval" = "xyes" ; then
+            AX_CHECK_OPENSSL([
+                    AC_CHECK_LIB(crypto, MD5_Init)
+                    AC_CHECK_LIB(crypto, RAND_pseudo_bytes)
+                    AC_CHECK_HEADERS([ openssl/md5.h openssl/rand.h])]
+                  ,[AC_MSG_ERROR([No openssl found.])])
+      fi
+    ],[
+     AX_CHECK_OPENSSL(,[AC_MSG_ERROR([No openssl found. using builtin crypto])])
+])
+
 
 dnl --------------------------------------------------------------------
 dnl Generate made files

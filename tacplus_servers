@@ -1,0 +1,14 @@
+# This is a common file used by audisp-tacplus, libpam_tacplus, and
+# libtacplus_map config files as shipped.
+#
+# Any tac_plus client config can go here that is common to all users of this
+# file, but typically it's just the TACACS+ server IP address(es) and shared
+# secret(s)
+#
+# This file should normally be mode 600, if you care about the security 
+# of your secret key.   When set to mode 600 NSS lookups for TACACS users
+# will only work for tacacs users that are logged in, via the local mapping.
+# For root, lookups will work for any tacacs users, logged in or not.
+
+#secret=tacacskey
+#server=192.168.0.30

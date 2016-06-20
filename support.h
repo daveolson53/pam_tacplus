@@ -45,9 +45,10 @@ int tacacs_get_password (pam_handle_t *, int, int, char **);
 int converse (pam_handle_t *, int, const struct pam_message *, struct pam_response **);
 void _pam_log (int, const char *, ...);
 void *_xcalloc (size_t);
-char *_pam_get_user(pam_handle_t *);
-char *_pam_get_terminal(pam_handle_t *);
-char *_pam_get_rhost(pam_handle_t *);
+void _pam_get_user(pam_handle_t *pamh, char **user);
+void _pam_get_terminal(pam_handle_t *pamh, char **tty);
+void _pam_get_rhost(pam_handle_t *pamh, char **rhost);
+void _reset_saved_user(void);
 
 #endif  /* PAM_TACPLUS_SUPPORT_H */
 

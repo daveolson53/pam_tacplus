@@ -1,3 +1,45 @@
+1.4.0-1
+Dave Olson, June 2016
+
+Changes to support local mapping, so that TACACS users do not need
+entries in /etc/passwd to supply home directory, uid, and gid information.
+
+This was done by using a new mapping library libtacplus_map.  See that
+package for details.
+
+Also see the comments about immutable loginuid in Pam.d.common-example
+
+libtac is converted to a shared library, so it can be used by other programs,
+and only functions and variables starting with tac_* are exported in the
+shared library.  Some functions were renamed to make this possible.
+
+A separate package libnss_tacplus uses the mapping library to do lookups by
+both name and uid.  uid lookups are only possible while a tacacs user is
+logged in.
+
+If multiple tacacs users at the same privilege level are logged in, the
+current behavior is that is that if a call is done from within the login
+session, the correct (login) name will be returned.   If from outside the
+session (audit uid and/or session don't match in the mapping file), the name
+from first map entry is used, much like normal systems where multiple users
+have the same UID.
+
+Added the runtime config capability to include another file, so that
+the tacacs servers are only listed in a single place.  Ship using
+/etc/tacplus_servers as an include file, and use it in the pam sample config
+Because that's common, allow debug=NUMBER for pam_tacplus, as well as plain
+"debug".
+
+Renamed external libtac functions to all have a tac_ prefix, to avoid
+name collision with other programs (the x*alloc family was an issue, in
+particular).   This is an API change, but since library just got bumped from
+1.0 to 2.0, left it at 2.0
+
+Enabled -Werror to catch errors early (and fixed a few related items).
+
+1.4.0
+* Use openssl by default for crypto
+
 1.3.9
 * Close file descriptor leak
 * Add client_connect_source_address

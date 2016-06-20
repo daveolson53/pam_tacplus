@@ -71,13 +71,13 @@ int tac_authen_send(int fd, const char *user, char *pass, char *tty,
     th->encryption = tac_encryption ? TAC_PLUS_ENCRYPTED_FLAG : TAC_PLUS_UNENCRYPTED_FLAG;
 
     TACDEBUG((LOG_DEBUG, "%s: user '%s', tty '%s', rem_addr '%s', encrypt: %s", \
-        __FUNCTION__, user, tty, r_addr, \
+        __func__, user, tty, r_addr, \
         (tac_encryption) ? "yes" : "no"))        
         
     if (!strcmp(tac_login,"chap")) {
         chal_len = strlen(chal);
         mdp_len = sizeof(u_char) + strlen(pass) + chal_len;
-        mdp = (u_char *) xcalloc(1, mdp_len);
+        mdp = (u_char *) tac_xcalloc(1, mdp_len);
         mdp[0] = 5;
         memcpy(&mdp[1], pass, strlen(pass));
         memcpy(mdp + strlen(pass) + 1, chal, chal_len);
@@ -91,12 +91,12 @@ int tac_authen_send(int fd, const char *user, char *pass, char *tty,
 		MD5Final((u_char *) digest, &mdcontext);
 #endif
         free(mdp);
-        token = (char*) xcalloc(1, sizeof(u_char) + 1 + chal_len + MD5_LEN);
+        token = (char*) tac_xcalloc(1, sizeof(u_char) + 1 + chal_len + MD5_LEN);
         token[0] = 5;
         memcpy(&token[1], chal, chal_len);
         memcpy(token + chal_len + 1, digest, MD5_LEN);
     } else {
-        token = xstrdup(pass);
+        token = tac_xstrdup(pass);
     }
 
     /* get size of submitted data */
@@ -137,7 +137,7 @@ int tac_authen_send(int fd, const char *user, char *pass, char *tty,
     if (w < 0 || w < TAC_PLUS_HDR_SIZE) {
         TACSYSLOG((LOG_ERR,\
             "%s: short write on header, wrote %d of %d: %m",\
-            __FUNCTION__, w, TAC_PLUS_HDR_SIZE))
+            __func__, w, TAC_PLUS_HDR_SIZE))
         free(token);
         free(pkt);
         free(th);
@@ -145,7 +145,7 @@ int tac_authen_send(int fd, const char *user, char *pass, char *tty,
     }
 
     /* build the packet */
-    pkt = (u_char *) xcalloc(1, bodylength+10);
+    pkt = (u_char *) tac_xcalloc(1, bodylength+10);
 
     bcopy(&tb, pkt+pkt_len, sizeof(tb)); /* packet body beginning */
     pkt_len += sizeof(tb);
@@ -162,7 +162,7 @@ int tac_authen_send(int fd, const char *user, char *pass, char *tty,
     /* pkt_len == bodylength ? */
     if (pkt_len != bodylength) {
         TACSYSLOG((LOG_ERR, "%s: bodylength %d != pkt_len %d",\
-            __FUNCTION__, bodylength, pkt_len))
+            __func__, bodylength, pkt_len))
         free(token);
         free(pkt);
         free(th);
@@ -176,14 +176,14 @@ int tac_authen_send(int fd, const char *user, char *pass, char *tty,
     if (w < 0 || w < pkt_len) {
         TACSYSLOG((LOG_ERR,\
             "%s: short write on body, wrote %d of %d: %m",\
-            __FUNCTION__, w, pkt_len))
+            __func__, w, pkt_len))
         ret = LIBTAC_STATUS_WRITE_ERR;
     }
 
     free(token);
     free(pkt);
     free(th);
-    TACDEBUG((LOG_DEBUG, "%s: exit status=%d", __FUNCTION__, ret))
+    TACDEBUG((LOG_DEBUG, "%s: exit status=%d", __func__, ret))
     return ret;
 }    /* tac_authen_send */
 

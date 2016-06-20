@@ -47,10 +47,10 @@ int tac_connect(struct addrinfo **server, char **key, int servers) {
     int fd=-1;
 
     if(servers == 0 || server == NULL) {
-        TACSYSLOG((LOG_ERR, "%s: no TACACS+ servers defined", __FUNCTION__))
+        TACSYSLOG((LOG_ERR, "%s: no TACACS+ servers defined", __func__))
     } else {
         for ( tries = 0; tries < servers; tries++ ) {   
-            if((fd=tac_connect_single(server[tries], key[tries], NULL, tac_timeout)) >= 0 ) {
+            if((fd=tac_connect_single(server[tries], key[tries], NULL)) >= 0 ) {
                 /* tac_secret was set in tac_connect_single on success */
                 break;
             }
@@ -58,7 +58,7 @@ int tac_connect(struct addrinfo **server, char **key, int servers) {
     }
 
     /* all attempts failed if fd is still < 0 */
-    TACDEBUG((LOG_DEBUG, "%s: exit status=%d",__FUNCTION__, fd))
+    TACDEBUG((LOG_DEBUG, "%s: exit status=%d",__func__, fd))
     return fd;
 } /* tac_connect */
 
@@ -67,7 +67,7 @@ int tac_connect(struct addrinfo **server, char **key, int servers) {
  *   >= 0 : valid fd
  *   <  0 : error status code, see LIBTAC_STATUS_...
  */
-int tac_connect_single(struct addrinfo *server, const char *key, struct addrinfo *srcaddr, int timeout) {
+int tac_connect_single(struct addrinfo *server, const char *key, struct addrinfo *srcaddr) {
     int retval = LIBTAC_STATUS_CONN_ERR; /* default retval */
     int fd = -1;
     int flags, rc;
@@ -78,7 +78,7 @@ int tac_connect_single(struct addrinfo *server, const char *key, struct addrinfo
     char *ip;
 
     if(server == NULL) {
-        TACSYSLOG((LOG_ERR, "%s: no TACACS+ server defined", __FUNCTION__))
+        TACSYSLOG((LOG_ERR, "%s: no TACACS+ server defined", __func__))
         return LIBTAC_STATUS_CONN_ERR;
     }
 
@@ -86,7 +86,7 @@ int tac_connect_single(struct addrinfo *server, const char *key, struct addrinfo
     ip = tac_ntop(server->ai_addr);
 
     if((fd=socket(server->ai_family, server->ai_socktype, server->ai_protocol)) < 0) {
-        TACSYSLOG((LOG_ERR,"%s: socket creation error: %s", __FUNCTION__,
+        TACSYSLOG((LOG_ERR,"%s: socket creation error: %s", __func__,
             strerror(errno)))
         return LIBTAC_STATUS_CONN_ERR;
     }
@@ -97,7 +97,7 @@ int tac_connect_single(struct addrinfo *server, const char *key, struct addrinfo
     /* put socket in non blocking mode for timeout support */
     if( fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1 ) {
         TACSYSLOG((LOG_ERR, "%s: cannot set socket non blocking",\
-            __FUNCTION__))
+            __func__))
         close(fd);
         return LIBTAC_STATUS_CONN_ERR;
     }
@@ -106,7 +106,7 @@ int tac_connect_single(struct addrinfo *server, const char *key, struct addrinfo
     if (srcaddr) {
         if (bind(fd, srcaddr->ai_addr, srcaddr->ai_addrlen) < 0) {
             TACSYSLOG((LOG_ERR, "%s: Failed to bind source address: %s",
-                __FUNCTION__, strerror(errno)))
+                __func__, strerror(errno)))
             close(fd);
             return LIBTAC_STATUS_CONN_ERR;
         }
@@ -116,7 +116,7 @@ int tac_connect_single(struct addrinfo *server, const char *key, struct addrinfo
     /* FIX this..for some reason errno = 0 on AIX... */
     if((rc == -1) && (errno != EINPROGRESS) && (errno != 0)) {
         TACSYSLOG((LOG_ERR,\
-            "%s: connection to %s failed: %m", __FUNCTION__, ip))
+            "%s: connection to %s failed: %m", __func__, ip))
         close(fd);
         return LIBTAC_STATUS_CONN_ERR;
     }
@@ -128,7 +128,7 @@ int tac_connect_single(struct addrinfo *server, const char *key, struct addrinfo
     FD_SET(fd, &writefds);
 
     /* set timeout seconds */
-    tv.tv_sec = timeout;
+    tv.tv_sec = tac_timeout;
     tv.tv_usec = 0;
 
     /* check if socket is ready for read and write */
@@ -136,15 +136,13 @@ int tac_connect_single(struct addrinfo *server, const char *key, struct addrinfo
 
     /* timeout */
     if ( rc == 0 ) {
-        close(fd);
         return LIBTAC_STATUS_CONN_TIMEOUT;
     }
 
     /* some other error or interrupt before timeout */
     if ( rc < 0 ) {
         TACSYSLOG((LOG_ERR,\
-            "%s: connection failed with %s: %m", __FUNCTION__, ip))
-        close(fd);
+            "%s: connection failed with %s: %m", __func__, ip))
         return LIBTAC_STATUS_CONN_ERR;
     }
 
@@ -152,21 +150,19 @@ int tac_connect_single(struct addrinfo *server, const char *key, struct addrinfo
     len = sizeof addr;
     if(getpeername(fd, (struct sockaddr*)&addr, &len) == -1) {
         TACSYSLOG((LOG_ERR,\
-            "%s: connection failed with %s: %m", __FUNCTION__, ip))
-        close(fd);
+            "%s: connection failed with %s: %m", __func__, ip))
         return LIBTAC_STATUS_CONN_ERR;
     }
 
     /* restore flags on socket - flags was set only when fd >= 0 */
     if(fcntl(fd, F_SETFL, flags) == -1) {
         TACSYSLOG((LOG_ERR, "%s: cannot restore socket flags: %m",\
-             __FUNCTION__)) 
-        close(fd);
+             __func__)) 
         return LIBTAC_STATUS_CONN_ERR;
     }
 
     /* connected ok */
-    TACDEBUG((LOG_DEBUG, "%s: connected to %s", __FUNCTION__, ip))
+    TACDEBUG((LOG_DEBUG, "%s: connected to %s", __func__, ip))
     retval = fd;
 
     /* set current tac_secret */
@@ -177,7 +173,7 @@ int tac_connect_single(struct addrinfo *server, const char *key, struct addrinfo
     }
 
     TACDEBUG((LOG_DEBUG, "%s: exit status=%d (fd=%d)",\
-        __FUNCTION__, retval < 0 ? retval:0, fd))
+        __func__, retval < 0 ? retval:0, fd))
     return retval;
 } /* tac_connect_single */
 

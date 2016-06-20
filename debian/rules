@@ -17,10 +17,14 @@ override_dh_clean:
 	dh_clean
 
 override_dh_auto_configure:
-	dh_auto_configure -- --enable-pamdir=/lib/$(DEB_HOST_MULTIARCH)/security --docdir=/usr/share/doc/libpam-tacplus
+	dh_auto_configure -- --enable-pamdir=/lib/$(DEB_HOST_MULTIARCH)/security --docdir=/usr/share/doc/libpam-tacplus --disable-openssl
 
 override_dh_install:
 	mkdir -p debian/libpam-tacplus/usr/share/pam-configs
 	cp debian/tacplus debian/libpam-tacplus/usr/share/pam-configs/
 	dh_install
 
+# tacplus_servers needs to be mode 600; the install sets it that way,
+# so keep dh_fixperms from "fixing" it.
+override_dh_fixperms:
+	dh_fixperms --exclude tacplus_servers

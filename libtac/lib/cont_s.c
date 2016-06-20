@@ -62,14 +62,14 @@ int tac_cont_send_seq(int fd, char *pass, int seq) {
     w = write(fd, th, TAC_PLUS_HDR_SIZE);
     if (w < 0 || w < TAC_PLUS_HDR_SIZE) {
         TACSYSLOG((LOG_ERR, "%s: short write on header, wrote %d of %d: %m",\
-            __FUNCTION__, w, TAC_PLUS_HDR_SIZE))
+            __func__, w, TAC_PLUS_HDR_SIZE))
         free(pkt);
         free(th);
         return LIBTAC_STATUS_WRITE_ERR;
     }
 
     /* build the packet */
-    pkt = (u_char *) xcalloc(1, bodylength);
+    pkt = (u_char *) tac_xcalloc(1, bodylength);
 
     bcopy(&tb, pkt+pkt_len, TAC_AUTHEN_CONT_FIXED_FIELDS_SIZE); /* packet body beginning */
     pkt_len += TAC_AUTHEN_CONT_FIXED_FIELDS_SIZE;
@@ -80,7 +80,7 @@ int tac_cont_send_seq(int fd, char *pass, int seq) {
     if (pkt_len != bodylength) {
         TACSYSLOG((LOG_ERR,\
             "%s: bodylength %d != pkt_len %d",\
-            __FUNCTION__, bodylength, pkt_len))
+            __func__, bodylength, pkt_len))
         free(pkt);
         free(th);
         return LIBTAC_STATUS_ASSEMBLY_ERR;
@@ -93,12 +93,12 @@ int tac_cont_send_seq(int fd, char *pass, int seq) {
     if (w < 0 || w < pkt_len) {
         TACSYSLOG((LOG_ERR,\
             "%s: short write on body, wrote %d of %d: %m",\
-            __FUNCTION__, w, pkt_len))
+            __func__, w, pkt_len))
         ret=LIBTAC_STATUS_WRITE_ERR;
     }
 
     free(pkt);
     free(th);
-    TACDEBUG((LOG_DEBUG, "%s: exit status=%d", __FUNCTION__, ret))
+    TACDEBUG((LOG_DEBUG, "%s: exit status=%d", __func__, ret))
     return ret;
 } /* tac_cont_send */

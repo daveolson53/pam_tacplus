@@ -16,6 +16,10 @@ major problems for about a year. Advantages of TACACS+ is that all
 encrypted. This module is an attempt to provide most useful part of
 TACACS+ functionality to applications using the PAM interface on Linux.
 
+Persistent connections are not supported, because libtac is single threaded.
+You must make a new connection via tac_connect_single() or equivalent for each
+new accounting, authorization, or authentication request.
+
 
 ### Recognized options:
 
@@ -25,7 +29,7 @@ TACACS+ functionality to applications using the PAM interface on Linux.
 | secret=STRING | ALL | can be specified more than once; secret key used to encrypt/decrypt packets sent/received from the server |
 | server=HOSTNAME server=IP_ADDR server=HOSTNAME:PORT server=IP_ADDR:PORT | auth, session | can be specified more than once; adds a TACACS+ server to the servers list |
 | timeout=INT | ALL | connection timeout in seconds default is 5 seconds |
-| login=STRING | auth | TACACS+ authentication service, this can be "pap", "chap" or "login" at the moment. Default is pap. |
+| login=STRING | auth | TACACS+ authentication service, this can be "shell", "pap", "chap" or "login" at the moment. Default is pap. |
 | prompt=STRING | auth | Custom password prompt. If you want to use a space use '_' character instead. |
 | acct_all | session | if multiple servers are supplied, pam_tacplus will send accounting start/stop packets to all servers on the list |
 | service | account, session | TACACS+ service for authorization and accounting |
@@ -36,6 +40,8 @@ required by the server, but it will work if they don't match the real
 service authorized :)
 During PAM account the AV pairs returned by the TACACS+ servers are made available to the
 PAM environment, so you can use i.e. pam_exec.so to do something with these AV pairs.
+Not all service types return AV pairs.  If you need privilege levels
+for accounting, e.g., at least some servers require the service to be "shell"
 
 ### Basic installation:
 This project is using autotools for building, so please run autoreconf first.
@@ -44,7 +50,13 @@ $ autoreconf -i
 $ ./configure && make && sudo make install
 ```
 
-### Example configuration:
+### Example configuration
+    (This will be different with systems such as Debian Wheezy and recent
+     Ubuntu that use the common-* configfile method pam-auth-update).
+
+    Also see Pam.d.common-example for examples with user mapping,  and more
+    comments.
+
 
 ```
 #%PAM-1.0
@@ -55,6 +67,10 @@ password   required	/lib/security/pam_cracklib.so
 password   required	/lib/security/pam_pwdb.so shadow use_authtok
 session    required	/lib/security/pam_tacplus.so debug server=1.1.1.1 server=2.2.2.2 secret=SECRET-1 secret=SECRET-2 service=ppp protocol=lcp
 ```
+
+If you need AV attributes back, such as privilege level, then for
+some servers, you'll need to use service=shell for "account"
+
 
 ### More on server lists:
 
