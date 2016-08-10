@@ -61,10 +61,10 @@ void _pam_log(int err, const char *format,...) {
 static char orig_user[__UT_NAMESIZE];
 
 /* used when we have a persistent connection */
-void _reset_saved_user()
+void _reset_saved_user(int debug)
 {
-    if (*orig_user)
-        _pam_log(LOG_NOTICE, "re-entered, clearing saved userid=%s", orig_user);
+    if (*orig_user && debug)
+        _pam_log(LOG_DEBUG, "re-entered, clearing saved userid=%s", orig_user);
     *orig_user = 0;
 }
 

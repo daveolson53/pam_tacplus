@@ -583,8 +583,6 @@ int pam_sm_authenticate (pam_handle_t * pamh, int flags,
     char *r_addr;
     int status;
 
-    /* reset static state in case we are re-entered */
-    _reset_saved_user();
     priv_level = 0;
     user = pass = tty = r_addr = NULL;
 
@@ -593,6 +591,9 @@ int pam_sm_authenticate (pam_handle_t * pamh, int flags,
     if (ctrl & PAM_TAC_DEBUG)
         syslog(LOG_DEBUG, "%s: called (pam_tacplus v%u.%u.%u)",
             __func__, PAM_TAC_VMAJ, PAM_TAC_VMIN, PAM_TAC_VPAT);
+
+    /* reset static state in case we are re-entered */
+    _reset_saved_user(ctrl & PAM_TAC_DEBUG);
 
     /*
      * If a mapped user entry already exists, we are probably being

@@ -48,7 +48,7 @@ void *_xcalloc (size_t);
 void _pam_get_user(pam_handle_t *pamh, char **user);
 void _pam_get_terminal(pam_handle_t *pamh, char **tty);
 void _pam_get_rhost(pam_handle_t *pamh, char **rhost);
-void _reset_saved_user(void);
+void _reset_saved_user(int);
 
 #endif  /* PAM_TACPLUS_SUPPORT_H */
 
