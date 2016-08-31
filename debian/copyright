@@ -4,7 +4,7 @@ libpam-tacplus
     Copyright (C) 2010, Pawel Krawczyk <pawel.krawczyk@hush.com>
     and Jeroen Nijhof <jeroen@jeroennijhof.nl>.
 
-    Portions Copyright 2015, 2016, Cumulus Networks Inc. 
+    Copyright 2015, 2016, Cumulus Networks Inc. 
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
