@@ -3,10 +3,9 @@ Section: admin
 Priority: extra
 Build-Depends: debhelper (>= 9), libpam-dev, dh-autoreconf, autoconf-archive, libaudit-dev,
     libtacplus-map-dev
-Maintainer: devsupport <devsupport@cumulusnetworks.com>
+Maintainer: Dave Olson <olson@cumulusnetworks.com>
 Standards-Version: 3.9.6
-#Homepage: https://github.com/jeroennijhof/pam_tacplus
-Homepage: http://www.cumulusnetworks.com
+Homepage: https://github.com/daveolson53/pam_tacplus
 
 Package: libpam-tacplus
 Architecture: any
