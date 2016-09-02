@@ -153,7 +153,6 @@ int _pam_account(pam_handle_t *pamh, int argc, const char **argv,
         task_id = (short unsigned int) tac_magic();
 #endif
 
-
     _pam_get_terminal(pamh, &tty);
     if(!strncmp(tty, "/dev/", 5))
         tty += 5;
@@ -889,7 +888,7 @@ int pam_sm_open_session (pam_handle_t * pamh, int flags,
 #if defined(HAVE_OPENSSL_RAND_H) && defined(HAVE_LIBCRYPTO)
         RAND_pseudo_bytes((unsigned char *) &task_id, sizeof(task_id));
 #else
-        task_id=(short int) magic();
+        task_id=(short int) tac_magic();
 #endif
     session_taskid = task_id;
     return _pam_account(pamh, argc, argv, TAC_PLUS_ACCT_FLAG_START, NULL);
