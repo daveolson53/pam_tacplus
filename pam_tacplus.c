@@ -450,8 +450,8 @@ static void talk_tac_server(int ctrl, int fd, char *user, char *pass,
              * commands like sudo, not just tacacs users
              */
             if (ctrl & PAM_TAC_DEBUG)
-                _pam_log (LOG_ERR, "TACACS+ authorisation failed for [%s]",
-                    user);
+                _pam_log (LOG_ERR, "TACACS+ authorisation failed for [%s] (status=%d)",
+                    user, arep.status);
             if(arep.msg != NULL)
                 free (arep.msg);
 

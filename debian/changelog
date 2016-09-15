@@ -1,5 +1,5 @@
 libpam-tacplus (1.4.0-2) unstable; urgency=medium
-  * Non-maintainer upload
+  * Based on upstream commitid b96a0f593e0858243bef0856a980737e25bf6fdd
   * Added the runtime config capability to include another file, so that
     the tacacs servers are only listed in a single place.  Ship using
     /etc/tacplus_servers as an include file, and use it in the pam sample config
@@ -8,8 +8,10 @@ libpam-tacplus (1.4.0-2) unstable; urgency=medium
   * Renamed external libtac functions to all have a tac_ prefix, to avoid
     name collision with other programs (the x*alloc family was an issue, in
     particular).
+  * Various cleanups for fd leaks, improvements in syslog messages, common
+    function cleanup and return
 
- -- Dave Olson <olson@cumulusnetworks.com>  Tue, 21 Jun 2016 11:03:21 -0700
+ -- Dave Olson <olson@cumulusnetworks.com>  Thu, 06 Oct 2016 15:36:15 -0700
 
 libpam-tacplus (1.4.0-1) unstable; urgency=medium
   * use OpenSSL for MD5 and random numbers
