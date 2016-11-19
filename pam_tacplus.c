@@ -233,7 +233,7 @@ int _pam_account(pam_handle_t *pamh, int argc, const char **argv,
  * Talk to the server for authentication
  */
 static int tac_auth_converse(int ctrl, int fd, int *sptr,
-    tacplus_server_t tsrv, char *pass, pam_handle_t * pamh) {
+    char *pass, pam_handle_t * pamh) {
     int msg, status, flags;
     int ret = 1;
     struct areply re = { .attr = NULL, .msg = NULL, .status = 0, .flags = 0 };
@@ -271,6 +271,10 @@ static int tac_auth_converse(int ctrl, int fd, int *sptr,
             break;
 
         case TAC_PLUS_AUTHEN_STATUS_FAIL:
+            /*
+             * This can be a user unknown case, so we don't want to stop
+             * trying other servers when we hit this case during authentication
+             */
             if (ctrl & PAM_TAC_DEBUG)
                 syslog(LOG_DEBUG, "tacacs status: TAC_PLUS_AUTHEN_STATUS_FAIL");
             if (NULL != conv_msg.msg) {
@@ -290,7 +294,7 @@ static int tac_auth_converse(int ctrl, int fd, int *sptr,
 
             *sptr = PAM_AUTH_ERR;
             ret = 0;
-            _pam_log(LOG_ERR, "auth failed: %d", msg);
+            _pam_log(LOG_NOTICE, "auth failed %d", msg);
             break;
 
         case TAC_PLUS_AUTHEN_STATUS_GETDATA:
@@ -417,8 +421,8 @@ static int tac_auth_converse(int ctrl, int fd, int *sptr,
  */
 static void talk_tac_server(int ctrl, int fd, char *user, char *pass,
                             char *tty, char *r_addr, struct tac_attrib **attr,
-                            int *sptr, tacplus_server_t tacsrv,
-                            struct areply *reply, pam_handle_t * pamh) {
+                            int *sptr, struct areply *reply,
+                            pam_handle_t * pamh) {
     if(!pass && attr) {  /* acct, much simpler */
         int retval;
         struct areply arep;
@@ -468,7 +472,7 @@ static void talk_tac_server(int ctrl, int fd, char *user, char *pass,
             _pam_log(LOG_ERR, "error sending auth req to TACACS+ server");
         }
         else {
-            while ( tac_auth_converse(ctrl, fd, sptr, tacsrv, pass, pamh))
+            while ( tac_auth_converse(ctrl, fd, sptr, pass, pamh))
                     ;
         }
     }
@@ -494,16 +498,19 @@ static void find_tac_server(int ctrl, int *tacfd, char *user, char *pass,
         }
 
         talk_tac_server(ctrl, fd, user, pass, tty, r_addr, attr, sptr,
-            tac_srv[srv_i], reply, pamh);
+            reply, pamh);
 
         if (*sptr == PAM_SUCCESS || *sptr == PAM_AUTH_ERR) {
-            if (active_server.addr == NULL) {
-                active_server.addr = tac_srv[srv_i].addr;
-                active_server.key = tac_srv[srv_i].key;
-            }
             if (ctrl & PAM_TAC_DEBUG)
                 syslog(LOG_DEBUG, "%s: active srv %d", __func__, srv_i);
-            break;
+            if (*sptr == PAM_SUCCESS) {
+                if (active_server.addr == NULL) {
+                    active_server.addr = tac_srv[srv_i].addr;
+                    active_server.key = tac_srv[srv_i].key;
+                }
+                break;
+            }
+            /*  else try other servers, if any. On errs, won't need fd */
         }
         close(fd);
         fd = -1;
@@ -548,7 +555,7 @@ static int do_tac_connect(int ctrl, int *tacfd, char *user, char *pass,
             _pam_log(LOG_ERR, "reconnect failed: %m");
         else 
             talk_tac_server(ctrl, fd, user, pass, tty, r_addr, attr, &status,
-                active_server, reply, pamh);
+                reply, pamh);
      }
 
     /*
