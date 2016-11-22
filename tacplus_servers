@@ -10,5 +10,11 @@
 # will only work for tacacs users that are logged in, via the local mapping.
 # For root, lookups will work for any tacacs users, logged in or not.
 
+# Set a default connection timeout of 10 seconds, and enable the use of
+# poll() when trying to read from tacacs servers.
+# Otherwise standard TCP timeouts apply.
+# Not set or set to a negative value disables use of poll().
+timeout=10
+
 #secret=tacacskey
 #server=192.168.0.30
