@@ -57,6 +57,10 @@ $ ./configure && make && sudo make install
     Also see Pam.d.common-example for examples with user mapping,  and more
     comments.
 
+    Common parameters can also be set in /etc/tacplus_servers, rather than
+    the commandline by using the include=/etc/tacplus_servers paramter.
+    For the secret parameter, this also improves security
+
 
 ```
 #%PAM-1.0

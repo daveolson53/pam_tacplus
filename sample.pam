@@ -10,6 +10,9 @@
 # details.
 # An alternative tp service=ppp protocol=lcp for account and session would be
 #   login=login service=shell protocol=ssh 
+# Common parameters can also be set in /etc/tacplus_servers, rather than
+# the commandline by using the include=/etc/tacplus_servers paramter.
+# For the secret parameter, this also improves security
 auth       required     /lib/security/pam_tacplus.so debug server=1.1.1.1 server=2.2.2.2:49 secret=SAME-SECRET
 account    required     /lib/security/pam_tacplus.so debug service=ppp protocol=lcp
 account    sufficient   /lib/security/pam_exec.so /usr/local/bin/showenv.sh
