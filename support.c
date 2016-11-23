@@ -36,6 +36,7 @@
 
 tacplus_server_t tac_srv[TAC_PLUS_MAXSERVERS];
 int tac_srv_no = 0;
+static int tac_key_no;
 
 char tac_service[64];
 char tac_protocol[64];
@@ -216,7 +217,6 @@ static int parse_argfile(const char *);
  */
 static int parse_arg(const char *arg) {
     int ctrl = 0;
-    static const char *current_secret;
 
     if(!strncmp (arg, "include=", 8)) {
         /*
@@ -289,7 +289,10 @@ static int parse_arg(const char *arg) {
                     tac_srv_no < TAC_PLUS_MAXSERVERS;
                     server = server->ai_next) {
                     tac_srv[tac_srv_no].addr = server;
-                    tac_srv[tac_srv_no].key = current_secret;
+                    /* use current key, if our index not yet set */
+                    if(tac_key_no && !tac_srv[tac_srv_no].key)
+                        tac_srv[tac_srv_no].key =
+                            tac_xstrdup(tac_srv[tac_key_no-1].key);
                     tac_srv_no++;
                 }
             } else {
@@ -303,16 +306,22 @@ static int parse_arg(const char *arg) {
         }
     } else if (!strncmp (arg, "secret=", 7)) {
         int i;
-
-        current_secret = tac_xstrdup(arg + 7); /* need to make a copy */
+        /* no need to complain if too many on this one */
+        if(tac_key_no < TAC_PLUS_MAXSERVERS) {
+            if((tac_srv[tac_key_no].key = tac_xstrdup(arg+7)))
+                tac_key_no++;
+            else
+                _pam_log(LOG_ERR, "%s: unable to copy server secret %d: %m",
+                    tac_key_no);
+        }
 
         /* if 'secret=' was given after a 'server=' parameter,
-         * fill in the current secret */
+         * fill in any unset keys up to current server number. */
         for(i = tac_srv_no-1; i >= 0; i--) {
-            if (tac_srv[i].key != NULL)
-                break;
+            if (tac_srv[i].key)
+                continue;
 
-            tac_srv[i].key = current_secret;
+            tac_srv[i].key = tac_xstrdup(arg + 7);
         }
     } else if (!strncmp (arg, "timeout=", 8)) {
         /* FIXME atoi() doesn't handle invalid numeric strings well */
@@ -351,13 +360,24 @@ static int parse_argfile(const char *file) {
     return ctrl;
 }
 
+/* 
+ *  This has to re-parse every time, because we can have different parameters
+ *  For different pam.d files.
+ */
 int _pam_parse (int argc, const char **argv) {
-    int ctrl = 0;
+    int i, ctrl = 0;
 
-    /* otherwise the list will grow with each call */
+    /*
+     * Because we can be called multiple times, we need to reset the state
+     * each time we go through this function.  We need to free allocated
+     * memory to avoid memory leaks.
+     */
+    for(i = 0; i<tac_key_no; i++)
+        if (tac_srv[i].key)
+            free(tac_srv[i].key);
     memset(tac_srv, 0, sizeof(tacplus_server_t) * TAC_PLUS_MAXSERVERS);
+    tac_key_no = 0;
     tac_srv_no = 0;
-
     tac_service[0] = 0;
     tac_protocol[0] = 0;
     tac_prompt[0] = 0;
@@ -384,3 +404,4 @@ int _pam_parse (int argc, const char **argv) {
 
     return ctrl;
 }    /* _pam_parse */
+
