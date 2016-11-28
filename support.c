@@ -1,5 +1,5 @@
 /* support.c - support functions for pam_tacplus.c
- * 
+ *
  * Copyright (C) 2010, Pawel Krawczyk <pawel.krawczyk@hush.com> and
  * Jeroen Nijhof <jeroen@jeroennijhof.nl>
  *
@@ -234,7 +234,7 @@ static int parse_arg(const char *arg) {
             ctrl |= PAM_TAC_DEBUG;
     } else if (!strcmp (arg, "use_first_pass")) {
         ctrl |= PAM_TAC_USE_FIRST_PASS;
-    } else if (!strcmp (arg, "try_first_pass")) { 
+    } else if (!strcmp (arg, "try_first_pass")) {
         ctrl |= PAM_TAC_TRY_FIRST_PASS;
     } else if (!strncmp (arg, "service=", 8)) { /* author & acct */
         tac_xstrcpy (tac_service, arg + 8, sizeof(tac_service));
@@ -254,7 +254,7 @@ static int parse_arg(const char *arg) {
     } else if (!strcmp (arg, "acct_all")) {
         ctrl |= PAM_TAC_ACCT;
     } else if (!strncmp (arg, "server=", 7)) { /* authen & acct */
-        if(tac_srv_no < TAC_PLUS_MAXSERVERS) { 
+        if(tac_srv_no < TAC_PLUS_MAXSERVERS) {
             struct addrinfo hints, *servers, *server;
             int rv;
             char *close_bracket, *server_name, *port, server_buf[256];
@@ -329,7 +329,7 @@ static int parse_arg(const char *arg) {
 
         if (tac_timeout < 0) {
             tac_timeout = 0;
-        } else { 
+        } else {
             tac_readtimeout_enable = 1;
         }
     } else {
