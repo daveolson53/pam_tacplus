@@ -30,10 +30,10 @@ Change to suit your conventions.  To minimize system impact, what
 you really should use is the range of uid's for your tacacs0..15 accounts
 
 	auth [default=1 success=ignore] pam_succeed_if.so uid > 1000 quiet
-	auth [authinfo_unavail=ignore success=done default=ignore]	pam_tacplus.so include=/etc/tacplus_servers login=login protocol=ssh service=shell
+	auth [authinfo_unavail=ignore success=end default=ignore]	pam_tacplus.so include=/etc/tacplus_servers login=login protocol=ssh service=shell
 
 	account [default=1 success=ignore] pam_succeed_if.so uid > 1000 quiet
-	account [authinfo_unavail=ignore success=done default=ignore]	pam_tacplus.so include=/etc/tacplus_servers login=login protocol=ssh service=shell
+	account [authinfo_unavail=ignore success=end default=ignore]	pam_tacplus.so include=/etc/tacplus_servers login=login protocol=ssh service=shell
 
 	session [default=1 success=ignore] pam_succeed_if.so uid > 1000 quiet
 	session [authinfo_unavail=ignore success=done default=ignore] pam_tacplus.so include=/etc/tacplus_servers login=login protocol=ssh service=shell
