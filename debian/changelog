@@ -1,5 +1,18 @@
+libpam-tacplus (1.4.1-1) unstable; urgency=low
+  * Added config variable "timeout" to limit time attempting to
+    connect to non-responding TACACS server.
+  * Fixed PAM configuration to continue to other PAM modules
+  * Fixed issues with ordering of multiple servers and secrets in config files.
+    libraries can connect to a TACACS+ server without being tacacs aware.
+  * Fixed to try all TACACS servers until a successful status is returned,
+    in case servers have different databases.
+  * Minor bug fixes and syslog debugging improvements.
+  * Minor corrections to Copyright and licensing
+  * vrf config option in tacplus_servers for management VRF
+
+ -- Dave Olson <olson@cumulusnetworks.com>  Tue, 29 Nov 2016 17:23:18 -0800
+
 libpam-tacplus (1.4.0-2) unstable; urgency=medium
-  * Based on upstream commitid b96a0f593e0858243bef0856a980737e25bf6fdd
   * Added the runtime config capability to include another file, so that
     the tacacs servers are only listed in a single place.  Ship using
     /etc/tacplus_servers as an include file, and use it in the pam sample config

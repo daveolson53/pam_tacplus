@@ -18,3 +18,9 @@ timeout=10
 
 #secret=tacacskey
 #server=192.168.0.30
+
+# If the management network is in a vrf, set this variable to the vrf name.
+# This would usually be "mgmt"
+# When this variable is set, the connection to the TACACS+ accounting servers
+# will be made through the named vrf.
+#vrf=mgmt

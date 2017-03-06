@@ -54,6 +54,8 @@
 /* address of server discovered by pam_sm_authenticate */
 static tacplus_server_t active_server;
 
+extern char *__vrfname;
+
 /* privilege level, used for mapping from tacacs userid to local
  * tacacs{0...15} user
  */
@@ -194,7 +196,8 @@ int _pam_account(pam_handle_t *pamh, int argc, const char **argv,
      */
     status = PAM_AUTHINFO_UNAVAIL;
     for(srv_i = 0; srv_i < tac_srv_no; srv_i++) {
-        tac_fd = tac_connect_single(tac_srv[srv_i].addr, tac_srv[srv_i].key, NULL);
+        tac_fd = tac_connect_single(tac_srv[srv_i].addr, tac_srv[srv_i].key,
+            NULL, __vrfname);
         if (tac_fd < 0) {
             _pam_log(LOG_WARNING, "%s: error sending %s (fd)", __func__,
                 typemsg);
@@ -491,7 +494,8 @@ static void find_tac_server(int ctrl, int *tacfd, char *user, char *pass,
         if (ctrl & PAM_TAC_DEBUG)
             syslog(LOG_DEBUG, "%s: trying srv %d", __func__, srv_i );
 
-        fd = tac_connect_single(tac_srv[srv_i].addr, tac_srv[srv_i].key, NULL);
+        fd = tac_connect_single(tac_srv[srv_i].addr, tac_srv[srv_i].key, NULL,
+            __vrfname);
         if (fd < 0) {
             _pam_log(LOG_ERR, "connection failed srv %d: %m", srv_i);
             continue;
@@ -550,7 +554,8 @@ static int do_tac_connect(int ctrl, int *tacfd, char *user, char *pass,
         if (ctrl & PAM_TAC_DEBUG)
             syslog(LOG_DEBUG, "%s: reconnecting to server", __func__);
 
-        fd = tac_connect_single(active_server.addr, active_server.key, NULL);
+        fd = tac_connect_single(active_server.addr, active_server.key, NULL,
+            __vrfname);
         if (fd < 0)
             _pam_log(LOG_ERR, "reconnect failed: %m");
         else 

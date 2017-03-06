@@ -131,8 +131,9 @@ extern int tac_readtimeout_enable;
 /* connect.c */
 extern int tac_timeout;
 
-int tac_connect(struct addrinfo **, char **, int);
-int tac_connect_single(struct addrinfo *, const char *, struct addrinfo *);
+int tac_connect(struct addrinfo **, char **, int, char *iface);
+int tac_connect_single(struct addrinfo *, const char *, struct addrinfo *,
+    char *iface);
 char *tac_ntop(const struct sockaddr *);
 
 int tac_authen_send(int, const char *, char *, char *,
