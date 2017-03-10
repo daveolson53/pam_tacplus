@@ -113,6 +113,7 @@ int _pam_send_account(int tac_fd, int type, const char *user, char *tty,
         free(re.msg);
 
     close(tac_fd);
+    tac_fd = -1;
     return retval;
 }
 
@@ -870,8 +871,10 @@ cleanup:
     if(arep.msg != NULL)
         free (arep.msg);
 
-    if(tac_fd >= 0)
+    if(tac_fd >= 0) {
         close(tac_fd);
+        tac_fd = -1;
+    }
 
     return status;
 }    /* pam_sm_acct_mgmt */

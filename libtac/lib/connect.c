@@ -193,7 +193,7 @@ int tac_connect_single(struct addrinfo *server, const char *key,
     }
 
 error:
-    if (retval < 0) /*  we had an error, don't leak fd */
+    if (retval < 0 && fd >= 0) /*  we had an error, don't leak fd */
         close(fd);
     TACDEBUG((LOG_DEBUG, "%s: exit status=%d (fd=%d)",\
         __func__, retval < 0 ? retval:0, fd))
