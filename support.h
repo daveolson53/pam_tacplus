@@ -28,7 +28,7 @@
 
 typedef struct {
     struct addrinfo *addr;
-    const char *key;
+    char *key;
 } tacplus_server_t;
 
 extern tacplus_server_t tac_srv[TAC_PLUS_MAXSERVERS];
@@ -37,6 +37,7 @@ extern int tac_srv_no;
 extern char tac_service[64];
 extern char tac_protocol[64];
 extern char tac_prompt[64];
+extern unsigned tac_use_tachome;
 
 int _pam_parse (int, const char **);
 unsigned long _resolve_name (char *);
@@ -45,10 +46,11 @@ int tacacs_get_password (pam_handle_t *, int, int, char **);
 int converse (pam_handle_t *, int, const struct pam_message *, struct pam_response **);
 void _pam_log (int, const char *, ...);
 void *_xcalloc (size_t);
-void _pam_get_user(pam_handle_t *pamh, char **user);
-void _pam_get_terminal(pam_handle_t *pamh, char **tty);
-void _pam_get_rhost(pam_handle_t *pamh, char **rhost);
+void _pam_get_user(pam_handle_t *, char **);
+void _pam_get_terminal(pam_handle_t *, char **);
+void _pam_get_rhost(pam_handle_t *, char **);
 void _reset_saved_user(int);
+void update_mapped(pam_handle_t *, char *, unsigned, char *);
 
 #endif  /* PAM_TACPLUS_SUPPORT_H */
 

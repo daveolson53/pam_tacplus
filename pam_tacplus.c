@@ -836,32 +836,8 @@ int pam_sm_acct_mgmt (pam_handle_t * pamh, int flags,
         attr = attr->next;
     }
 
-    if (update_mapuser(user, priv_level, r_addr)) {
-        /*
-         * if we mapped the user name, set SUDO_PROMPT in env so that
-         * it prompts as the login user, not the mapped user, unless (unlikely)
-         * the prompt has already been set.  Set SUDO_USER as well, for
-         * consistency.
-         */
-        if (!pam_getenv(pamh, "SUDO_PROMPT")) {
-            char nprompt[strlen("SUDO_PROMPT=[sudo] password for ") +
-                strlen(user) + 3]; /* + 3 for ": " and the \0 */
-            snprintf(nprompt, sizeof nprompt,
-                "SUDO_PROMPT=[sudo] password for %s: ", user);
-            if (pam_putenv(pamh, nprompt) != PAM_SUCCESS)
-                _pam_log(LOG_NOTICE, "failed to set PAM sudo prompt (%s)",
-                    nprompt);
-        }
-        if (!pam_getenv(pamh, "SUDO_USER")) {
-            char sudouser[strlen("SUDO_USER=") +
-                strlen(user) + 1]; /* + 1 for the \0 */
-            snprintf(sudouser, sizeof sudouser,
-                "SUDO_USER=%s", user);
-            if (pam_putenv(pamh, sudouser) != PAM_SUCCESS)
-                _pam_log(LOG_NOTICE, "failed to set PAM sudo user (%s)",
-                    sudouser);
-        }
-    }
+    update_mapped(pamh, user, priv_level, r_addr);
+
 
 cleanup:
     /* free returned attributes */
@@ -923,7 +899,7 @@ int pam_sm_close_session (pam_handle_t * pamh, int flags,
 
     task_id = session_taskid; /* task_id must match start */
     rc = _pam_account(pamh, argc, argv, TAC_PLUS_ACCT_FLAG_STOP, NULL); 
-    __update_loguid(user, NULL, NULL); /* now dead */
+    __update_loguid(user); /* now dead, cleanup mapping */
     return rc;
 }    /* pam_sm_close_session */
 

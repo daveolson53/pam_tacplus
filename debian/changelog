@@ -1,5 +1,12 @@
+libpam-tacplus (1.4.2-1) unstable; urgency=low
+  * Added user_homedir config variable to allow per-user
+    home directories (unless per-command authorization is enabled)
+  * Added tacplus_servers manual page
+
+ -- Dave Olson <olson@cumulusnetworks.com>  Thu, 23 Mar 2017 17:55:18 -0700
+
+
 libpam-tacplus (1.4.1-1) unstable; urgency=low
-  * Added config variable "timeout" to limit time attempting to
     connect to non-responding TACACS server.
   * Fixed PAM configuration to continue to other PAM modules
   * Fixed issues with ordering of multiple servers and secrets in config files.

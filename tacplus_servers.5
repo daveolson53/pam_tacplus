@@ -1,0 +1,120 @@
+.TH tacplus_servers 5
+.\" Copyright 2017 Cumulus Networks, Inc.  All rights reserved.
+.SH NAME
+/etc/tacplus_servers \- TACACS+ client configuration file
+.SH SYNOPSIS
+.B /etc/tacplus_servers
+is a common configuration file for the tacplus client libraries and tools.
+.SH DESCRIPTION
+Providing a common configuration file for the tacplus client tools and libraries
+simplifies configuration.  For most uses, this is the only configuration file
+that needs to be modified to enable TACACS+ client use.
+.PP
+By default, all components source this file, enabling a single point of
+configuration for the TACACS server(s), debug settings, etc.
+.PP
+Because this file contains the shared secret key(s), it should not have
+world read permissions (it should be mode 600 and owned by root).
+This means that some components (such as NSS) may not be able to read this
+file when running as non-root users; these components have additional
+configuration files.
+.PP
+There are also additional configuration files that apply to the separate
+components.
+.PP
+Not all components use all variables; some configuration variables are
+ignored by one or more components.
+.TP
+.I debug=Number
+Output debugging information via syslog(3).
+Debugging is heavy, including passwords. Do not leave debugging enabled on a production switch once you have completed troubleshooting.  Currently most components only check to see if it is non-zero.  Some components will print additional debug if set to
+.B$ 2 .
+.TP
+.I  "server=IP_ADDRESS | HOSTNAME"
+Adds a TACACS+ server to the servers list. Servers will be queried in turn
+until a match is found, or no servers remain in the list. Can be specified up
+to 7 times.  When the IP_ADDR form is used, it can be optionally followed by a
+port number, preceded by a ":".  The default port is 49.  An IP address is
+preferred, rather than a hostname, since some components may start prior to
+networking.  May occur in any order with the
+.I secret
+parameter (below).
+.TP
+.I secret=STRING
+Secret key used to encrypt/decrypt packets sent to/received from the server.
+Can be specified more than once, and can be in any order with respect to the
+server= parameter.   When fewer
+.I secret
+parameters are specified than
+.I server
+parameters, the last secret given is used for each of the remaining servers.
+This parameter should only be put into files such as /etc/tacplus_servers that
+are not world readable.
+.TP
+.I timeout=SECONDS
+TACACS+ server(s) communication timeout. The default value is 10 seconds.
+.TP
+.I login=STRING
+TACACS+ authentication service (pap, chap, or login). The default value is pap.
+.TP
+.I acct_all=1
+Configuration option for audisp_tacplus and pam_tacplus sending accounting records to all supplied servers (1), or the first server to respond (0). The default value is 1.
+When sending accounting records, the record is sent to all servers in the list if
+acct_all=1, which is the default.  Set to
+.B 0
+if the accounting records should only be sent to the first server that responds.
+.TP
+.I timeout=SECONDS
+Sets the timeout in seconds for connections to each TACACS+ server.   The
+default is 10 seconds for all lookups except that NSS lookups use a 5 second
+timeout.
+.TP
+.I user_homedir=1
+This is not enabled by default.   When enabled, separate home directories for
+each TACACS+ user are created when the TACACS+ user first logs in.  By default
+the home directory in the mapping accounts in
+.I /etc/passwd
+(/home/tacacs0 ... /home/tacacs15) are used.
+This is not honored for accounts with restricted shells (when per-command
+authorization is enabled).  When set, if the home directory does not exist, it
+is created with the When set, if the home directory does not exist, it is
+created with the
+.I mkhomedir_helper
+program, in the same manner as pam_mkhomedir.
+.TP
+.I vrf=VRFNAME
+If the management network is in a VRF, set this variable to the VRF name. This
+would  usually  be  "mgmt".  When this variable is set, the connection to the
+TACACS+ accounting servers is made through the named VRF.  The client processes
+must be restarted after this is changed.  Because the NSS libraries become part
+of processes such as sshd, this typically requires a reboot.
+.TP
+.I service=shell
+TACACS+ accounting and authorization service. Examples include shell, pap,
+ppp, and slip.
+The default value is shell.
+.TP
+.I protocol=ssh
+TACACS+ protocol field. This option is use dependent.
+PAM uses the SSH protocol.
+.SH "SEE ALSO"
+.BR audisp-tacplus (8),
+.BR pam_mkhomedir (8),
+.BR tacplus-auth (8),
+.BR tacplus-restrict (8)
+.SH FILES
+.I /etc/audisp/plugins.d/audisp-tacplus.conf
+- audisp plugin configuration
+.br
+.I /etc/audisp/audisp-tac_plus.conf
+- tacplus client configuration file for accounting.  Any of the variables in
+this manual page may be added to this file, if you only want them to affect
+the TACACS+ accounting.
+.br
+.I /etc/tacplus_nss.conf
+- tacplus NSS client library configuration file.
+If you want to debug just NSS lookups, or have configuration variables that can
+be used by programs that do not run with root privileges, add the configuration
+variables listed in this manual page to this file
+.SH AUTHOR
+Dave Olson <olson@cumulusnetworks.com>
