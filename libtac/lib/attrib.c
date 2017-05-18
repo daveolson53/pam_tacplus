@@ -85,7 +85,8 @@ void tac_free_attrib(struct tac_attrib **attr) {
     if(*attr == NULL)
             return;
 
-    a  = b = *attr;
+    b = *attr;
+    *attr = NULL;
     
     /* find last allocated block */
     do {
@@ -95,5 +96,4 @@ void tac_free_attrib(struct tac_attrib **attr) {
         free(a);
     } while (b != NULL);
 
-    *attr = NULL;
 }

@@ -108,6 +108,7 @@ struct areply {
 #define LIBTAC_STATUS_SHORT_BODY    -7
 #define LIBTAC_STATUS_CONN_TIMEOUT  -8
 #define LIBTAC_STATUS_CONN_ERR      -9
+#define LIBTAC_STATUS_CONN_CLOSED   -10
 
 /* Runtime flags */
 

@@ -18,6 +18,8 @@
  * See `CHANGES' file for revision history.
  */
 
+#define _GNU_SOURCE /*  for POLLRDHUP */
+
 #include <sys/time.h>
 #include <poll.h>
 #include <sys/ioctl.h>
@@ -31,7 +33,8 @@
 #endif
 
 static int delta_msecs(struct timeval *newer, struct timeval *older) {
-    long deltasecs, deltausecs;
+    time_t deltasecs;
+    suseconds_t deltausecs;
     struct timeval now;
 
     if (newer == NULL) {
@@ -85,15 +88,21 @@ int tac_read_wait(int fd, int timeout, int size, int *time_left) {
     remaining = timeout;  /* in msecs */
 
     fds[0].fd = fd;
-    fds[0].events = POLLIN;
+    /*
+     * should probably have a feature test for POLLRDHUP for non-linux.
+     * It's been in linux and glibc for many years
+     */
+    fds[0].events = POLLIN | POLLRDHUP;
 
     while (remaining > 0) {
         int rc;
         int avail = 0;
         rc = poll(fds, 1, remaining);
-        remaining -= delta_msecs(NULL, &start);
+        remaining = timeout - delta_msecs(NULL, &start);
+        if (remaining < 0)
+            remaining = 0;
         if ( time_left != NULL ) {
-            *time_left = remaining > 0 ? remaining : 0;
+            *time_left = remaining;
         }
 
         /* why did poll return */
@@ -105,6 +114,11 @@ int tac_read_wait(int fd, int timeout, int size, int *time_left) {
         if (rc > 0) {     /* there is data available */
             if (size > 0 &&    /* check for enuf available? */
                 ioctl(fd,FIONREAD,(char*)&avail) == 0 && avail < size) {
+                if(fds[0].revents & POLLRDHUP) {
+                    /* other side closed the socket, stop polling */
+                    retval = -1;
+                    break;
+                }
                 continue;   /* not enuf yet, wait for more */
             } else {
                 break;
@@ -119,5 +133,5 @@ int tac_read_wait(int fd, int timeout, int size, int *time_left) {
         retval = errno;
         break;
     }
-    return retval;
+    return remaining == 0 ? -1 : retval;
 }    /* read_wait */

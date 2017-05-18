@@ -2,9 +2,10 @@ libpam-tacplus (1.4.2-1) unstable; urgency=low
   * Added user_homedir config variable to allow per-user
     home directories (unless per-command authorization is enabled)
   * Added tacplus_servers manual page
+  * Fixed problem with PAM configuration that allowed login when
+    authentication was successful, but authorization was denied.
 
- -- Dave Olson <olson@cumulusnetworks.com>  Thu, 23 Mar 2017 17:55:18 -0700
-
+ -- Dave Olson <olson@cumulusnetworks.com>  Tue, 23 May 2017 17:07:54 -0700
 
 libpam-tacplus (1.4.1-1) unstable; urgency=low
     connect to non-responding TACACS server.

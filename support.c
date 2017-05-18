@@ -16,8 +16,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program - see the file COPYING.
- *
- * See `CHANGES' file for revision history.
  */
 
 #define PAM_SM_AUTH
@@ -38,6 +36,7 @@
 #include <sys/stat.h>
 
 tacplus_server_t tac_srv[TAC_PLUS_MAXSERVERS];
+extern tacplus_server_t active_server;
 int tac_srv_no = 0;
 static int tac_key_no;
 static int debug; /* so we don't need to get from pam */
@@ -387,6 +386,7 @@ int _pam_parse (int argc, const char **argv) {
         if (tac_srv[i].key)
             free(tac_srv[i].key);
     memset(tac_srv, 0, sizeof(tacplus_server_t) * TAC_PLUS_MAXSERVERS);
+    active_server.addr = NULL; /* be sure no refs into freed mem */
     tac_key_no = 0;
     tac_srv_no = 0;
     tac_service[0] = 0;
@@ -418,11 +418,11 @@ int _pam_parse (int argc, const char **argv) {
     
 
 /*
- * when login is successful (from pam account entry point, update
- * our local mapping data, and if we are using the tacacs username
- * in the home directory, create the home directory if needed (using 
- * the mkhomedir_helper program).
- * The code to exec mkhomedir_helper is based on pam_mkhomedir.c
+ * when login is successful (from pam account entry point, after authorization
+ * succeeds), update our local mapping data, and if we are using the tacacs
+ * username in the home directory, create the home directory if needed (using
+ * the mkhomedir_helper program).  The code to exec mkhomedir_helper is based on
+ * pam_mkhomedir.c
  */
 void update_mapped(pam_handle_t *pamh, char *user, unsigned level, char *rhost)
 {
