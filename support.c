@@ -2,6 +2,7 @@
  *
  * Copyright (C) 2010, Pawel Krawczyk <pawel.krawczyk@hush.com> and
  * Jeroen Nijhof <jeroen@jeroennijhof.nl>
+ * Copyright 2016, 2017 Cumulus Networks, Inc.  All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +16,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program - see the file COPYING.
- *
- * See `CHANGES' file for revision history.
  */
 
 #define PAM_SM_AUTH
@@ -33,14 +32,20 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <ctype.h>
+#include <signal.h>
+#include <sys/stat.h>
 
 tacplus_server_t tac_srv[TAC_PLUS_MAXSERVERS];
+extern tacplus_server_t active_server;
 int tac_srv_no = 0;
 static int tac_key_no;
+static int debug; /* so we don't need to get from pam */
 
 char tac_service[64];
 char tac_protocol[64];
 char tac_prompt[64];
+char *__vrfname;
+unsigned tac_use_tachome;
 
 void _pam_log(int err, const char *format,...) {
     char msg[256];
@@ -251,6 +256,8 @@ static int parse_arg(const char *arg) {
         }
     } else if (!strncmp (arg, "login=", 6)) {
         tac_xstrcpy (tac_login, arg + 6, sizeof(tac_login));
+    } else if (!strncmp (arg, "user_homedir=", 13)) {
+        tac_use_tachome = strtoul(arg+13, NULL, 0);
     } else if (!strcmp (arg, "acct_all")) {
         ctrl |= PAM_TAC_ACCT;
     } else if (!strncmp (arg, "server=", 7)) { /* authen & acct */
@@ -332,10 +339,13 @@ static int parse_arg(const char *arg) {
         } else {
             tac_readtimeout_enable = 1;
         }
+    } else if(!strncmp(arg, "vrf=", 4)) {
+        __vrfname = tac_xstrdup(arg + 4);
     } else {
         _pam_log (LOG_WARNING, "unrecognized option: %s", arg);
     }
 done:
+    debug = ctrl & PAM_TAC_DEBUG;
     return ctrl;
 }
 
@@ -376,6 +386,7 @@ int _pam_parse (int argc, const char **argv) {
         if (tac_srv[i].key)
             free(tac_srv[i].key);
     memset(tac_srv, 0, sizeof(tacplus_server_t) * TAC_PLUS_MAXSERVERS);
+    active_server.addr = NULL; /* be sure no refs into freed mem */
     tac_key_no = 0;
     tac_srv_no = 0;
     tac_service[0] = 0;
@@ -404,4 +415,101 @@ int _pam_parse (int argc, const char **argv) {
 
     return ctrl;
 }    /* _pam_parse */
+    
 
+/*
+ * when login is successful (from pam account entry point, after authorization
+ * succeeds), update our local mapping data, and if we are using the tacacs
+ * username in the home directory, create the home directory if needed (using
+ * the mkhomedir_helper program).  The code to exec mkhomedir_helper is based on
+ * pam_mkhomedir.c
+ */
+void update_mapped(pam_handle_t *pamh, char *user, unsigned level, char *rhost)
+{
+    struct passwd *pw;
+    struct stat st;
+    int rc, retval, child, restore = 0;
+    struct sigaction newsa, oldsa;
+    const char *path = "/sbin/mkhomedir_helper";
+
+    if (!update_mapuser(user, level, rhost, tac_use_tachome))
+        return;
+
+    /*
+     * if we mapped the user name, set SUDO_PROMPT in env so that
+     * it prompts as the login user, not the mapped user, unless (unlikely)
+     * the prompt has already been set.  Set SUDO_USER as well, for
+     * consistency.
+     */
+    if (!pam_getenv(pamh, "SUDO_PROMPT")) {
+        char nprompt[strlen("SUDO_PROMPT=[sudo] password for ") +
+            strlen(user) + 3]; /* + 3 for ": " and the \0 */
+        snprintf(nprompt, sizeof nprompt,
+            "SUDO_PROMPT=[sudo] password for %s: ", user);
+        if (pam_putenv(pamh, nprompt) != PAM_SUCCESS)
+            _pam_log(LOG_NOTICE, "failed to set PAM sudo prompt (%s)",
+                nprompt);
+    }
+    if (!pam_getenv(pamh, "SUDO_USER")) {
+        char sudouser[strlen("SUDO_USER=") +
+            strlen(user) + 1]; /* + 1 for the \0 */
+        snprintf(sudouser, sizeof sudouser,
+            "SUDO_USER=%s", user);
+        if (pam_putenv(pamh, sudouser) != PAM_SUCCESS)
+            _pam_log(LOG_NOTICE, "failed to set PAM sudo user (%s)",
+                sudouser);
+    }
+
+    if (!tac_use_tachome)
+        return;
+
+    pw = getpwnam(user); /* this should never fail, at this point... */
+    if (!pw) {
+        _pam_log(LOG_NOTICE, "Unable to get passwd entry for user (%s)", user);
+        return;
+    }
+
+    if (stat(pw->pw_dir, &st) == 0)
+        return;
+    if (debug)
+        _pam_log(LOG_NOTICE, "creating home directory %s for user %s",
+            pw->pw_dir, user);
+
+    /*
+     * This code arranges that the demise of the child does not cause
+     * the application to receive a signal it is not expecting - which
+     * may kill the application or worse.  Based on pam_mkhomedir.c
+     */
+    memset(&newsa, '\0', sizeof(newsa));
+    newsa.sa_handler = SIG_DFL;
+    if (sigaction(SIGCHLD, &newsa, &oldsa) == 0)
+        restore = 1;
+
+    child = fork();
+    if(child == -1) {
+        pam_syslog(LOG_ERR, "fork to exec %s %s failed: %m", path, user);
+        return;
+    }
+    if(child == 0) {
+        execl(path, path, user, NULL);
+        pam_syslog(LOG_ERR, "exec %s %s failed: %m", path, user);
+        exit(1);
+    }
+
+	while ((rc=waitpid(child, &retval, 0)) < 0 && errno == EINTR)
+        ;
+	if(rc < 0)
+        pam_syslog(pamh, LOG_ERR, "waitpid for exec of %s %s failed: %m", path,
+            user);
+    else if(!WIFEXITED(retval))
+        pam_syslog(pamh, LOG_ERR, "%s %s abnormal exit: 0x%x", retval);
+    else {
+        retval = WEXITSTATUS(retval);
+        if(retval)
+            pam_syslog(pamh, LOG_ERR, "%s %s abnormal exit: %d", path, user,
+                retval);
+	}
+
+    if (restore)
+        sigaction(SIGCHLD, &oldsa, NULL);
+}

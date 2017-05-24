@@ -52,7 +52,9 @@
 #endif
 
 /* address of server discovered by pam_sm_authenticate */
-static tacplus_server_t active_server;
+tacplus_server_t active_server;
+
+extern char *__vrfname;
 
 /* privilege level, used for mapping from tacacs userid to local
  * tacacs{0...15} user
@@ -67,13 +69,11 @@ static short unsigned int task_id = 0;
 int _pam_send_account(int tac_fd, int type, const char *user, char *tty,
     char *r_addr, char *cmd) {
     char buf[64];
-    struct tac_attrib *attr;
+    struct tac_attrib *attr = NULL;
     int retval = -1;
     struct areply re;
 
     re.msg = NULL;
-    attr=(struct tac_attrib *)tac_xcalloc(1, sizeof(struct tac_attrib));
-
     snprintf(buf, sizeof buf, "%lu", (unsigned long)time(NULL));
 
     if (type == TAC_PLUS_ACCT_FLAG_START) {
@@ -110,7 +110,9 @@ int _pam_send_account(int tac_fd, int type, const char *user, char *tty,
     if(re.msg != NULL)
         free(re.msg);
 
+    active_server.addr = NULL;
     close(tac_fd);
+    tac_fd = -1;
     return retval;
 }
 
@@ -194,15 +196,17 @@ int _pam_account(pam_handle_t *pamh, int argc, const char **argv,
      */
     status = PAM_AUTHINFO_UNAVAIL;
     for(srv_i = 0; srv_i < tac_srv_no; srv_i++) {
-        tac_fd = tac_connect_single(tac_srv[srv_i].addr, tac_srv[srv_i].key, NULL);
+        tac_fd = tac_connect_single(tac_srv[srv_i].addr, tac_srv[srv_i].key,
+            NULL, __vrfname);
         if (tac_fd < 0) {
             _pam_log(LOG_WARNING, "%s: error sending %s (fd)", __func__,
                 typemsg);
             continue;
         }
         if (ctrl & PAM_TAC_DEBUG)
-            syslog(LOG_DEBUG, "%s: connected with fd=%d (srv %d)", __func__,
-                tac_fd, srv_i);
+            syslog(LOG_DEBUG, "%s: connected with fd=%d to srv[%d] %s", __func__,
+                tac_fd, srv_i, tac_srv[srv_i].addr ?
+                tac_ntop(tac_srv[srv_i].addr->ai_addr) : "not set");
 
         retval = _pam_send_account(tac_fd, type, user, tty, r_addr, cmd);
         if (retval < 0) {
@@ -442,10 +446,13 @@ static void talk_tac_server(int ctrl, int fd, char *user, char *pass,
         }
 
         if (ctrl & PAM_TAC_DEBUG)
-            syslog(LOG_DEBUG, "%s: sent authorization request", __func__);
+            syslog(LOG_DEBUG, "%s: sent authorization request for [%s]",
+                __func__, user);
 
         arep.msg = NULL;
         tac_author_read(fd, &arep);
+        if (reply)
+            *reply = arep;
 
         if(arep.status != AUTHOR_STATUS_PASS_ADD &&
             arep.status != AUTHOR_STATUS_PASS_REPL) {
@@ -453,17 +460,13 @@ static void talk_tac_server(int ctrl, int fd, char *user, char *pass,
              * this is debug because we can get called for any user for
              * commands like sudo, not just tacacs users
              */
-            if (ctrl & PAM_TAC_DEBUG)
-                _pam_log (LOG_ERR, "TACACS+ authorisation failed for [%s] (status=%d)",
-                    user, arep.status);
+            *sptr = PAM_PERM_DENIED;
+            _pam_log (LOG_ERR, "TACACS+ authorization failed for [%s] (status=%d)",
+                user, arep.status);
             if(arep.msg != NULL)
                 free (arep.msg);
-
-            *sptr = PAM_PERM_DENIED;
         }
         else  {
-            if (reply)
-                *reply = arep;
             *sptr = PAM_SUCCESS;
         }
     }
@@ -480,7 +483,8 @@ static void talk_tac_server(int ctrl, int fd, char *user, char *pass,
 
 
 /*
- * find a responding tacacs server.  See comments at do_tac_connect() below
+ * find a responding tacacs server, and converse with it.
+ * See comments at do_tac_connect() below
  */
 static void find_tac_server(int ctrl, int *tacfd, char *user, char *pass,
                            char *tty, char *r_addr, struct tac_attrib **attr,
@@ -489,20 +493,28 @@ static void find_tac_server(int ctrl, int *tacfd, char *user, char *pass,
 
     for (srv_i = 0; srv_i < tac_srv_no; srv_i++) {
         if (ctrl & PAM_TAC_DEBUG)
-            syslog(LOG_DEBUG, "%s: trying srv %d", __func__, srv_i );
+            syslog(LOG_DEBUG, "%s: trying srv[%d] %s", __func__, srv_i,
+                tac_srv[srv_i].addr ?
+                tac_ntop(tac_srv[srv_i].addr->ai_addr) : "not set");
 
-        fd = tac_connect_single(tac_srv[srv_i].addr, tac_srv[srv_i].key, NULL);
+        fd = tac_connect_single(tac_srv[srv_i].addr, tac_srv[srv_i].key, NULL,
+            __vrfname);
         if (fd < 0) {
-            _pam_log(LOG_ERR, "connection failed srv %d: %m", srv_i);
+            _pam_log(LOG_ERR, "connection to srv[%d] %s failed: %m", srv_i,
+                tac_srv[srv_i].addr ?
+                tac_ntop(tac_srv[srv_i].addr->ai_addr) : "not set");
+            active_server.addr = NULL; /*  in case last in list */
             continue;
         }
 
         talk_tac_server(ctrl, fd, user, pass, tty, r_addr, attr, sptr,
             reply, pamh);
 
-        if (*sptr == PAM_SUCCESS || *sptr == PAM_AUTH_ERR) {
+        if (*sptr == PAM_SUCCESS || *sptr == PAM_AUTH_ERR ||
+            *sptr == PAM_PERM_DENIED) {
             if (ctrl & PAM_TAC_DEBUG)
-                syslog(LOG_DEBUG, "%s: active srv %d", __func__, srv_i);
+                syslog(LOG_DEBUG, "%s: srv[%d] %s, pam_status=%d", __func__,
+                   srv_i, tac_ntop(tac_srv[srv_i].addr->ai_addr), *sptr);
             if (*sptr == PAM_SUCCESS) {
                 if (active_server.addr == NULL) {
                     active_server.addr = tac_srv[srv_i].addr;
@@ -512,6 +524,9 @@ static void find_tac_server(int ctrl, int *tacfd, char *user, char *pass,
             }
             /*  else try other servers, if any. On errs, won't need fd */
         }
+        else /*  in case end of list */
+            active_server.addr = NULL;
+
         close(fd);
         fd = -1;
     }
@@ -543,20 +558,24 @@ static int do_tac_connect(int ctrl, int *tacfd, char *user, char *pass,
                           struct areply *reply, pam_handle_t * pamh) {
     int status = PAM_AUTHINFO_UNAVAIL, fd;
 
-     if (active_server.addr == NULL) /* find a server with the info we want */
+    if (active_server.addr == NULL) { /* find a server with the info we want */
         find_tac_server(ctrl, &fd, user, pass, tty, r_addr, attr, &status,
             reply, pamh);
-     else { /* connect to the already chosen server */
+    }
+    else { /* connect to the already chosen server, so we get 
+            * consistent results.  */
         if (ctrl & PAM_TAC_DEBUG)
-            syslog(LOG_DEBUG, "%s: reconnecting to server", __func__);
+            syslog(LOG_DEBUG, "%s: use previous server %s", __func__,
+               tac_ntop(active_server.addr->ai_addr));
 
-        fd = tac_connect_single(active_server.addr, active_server.key, NULL);
+        fd = tac_connect_single(active_server.addr, active_server.key, NULL,
+            __vrfname);
         if (fd < 0)
             _pam_log(LOG_ERR, "reconnect failed: %m");
         else 
             talk_tac_server(ctrl, fd, user, pass, tty, r_addr, attr, &status,
                 reply, pamh);
-     }
+    }
 
     /*
      * this is debug because we can get called for any user for
@@ -731,45 +750,35 @@ int pam_sm_acct_mgmt (pam_handle_t * pamh, int flags,
 
     memset(&arep, 0, sizeof arep);
 
-    /* check if user has been successfully authenticated by TACACS+.
-     * We cannot solely authorize user if it hasn't
-     * been authenticated or has been authenticated by method other
-     * than TACACS+.   This can happen for public key ssh.
-     * We still need to write a mapping entry though, so we need to
-     * initiate the connection.
+    /*
+     * Check if user is authorized, independently of authentication.
+     * Authentication may have happened via ssh public key, rather than
+     * via TACACS+.  PAM should not normally get to this entry point if
+     * user is not yet authenticated.
+     * We only write the mapping entry (if needed) when authorization
+     * is succesful.
     */
     status = do_tac_connect(ctrl, &tac_fd, user, NULL, tty, r_addr, &attr_s,
         &arep, pamh);
-    if(active_server.addr == NULL || status) {
-        if(tac_fd < 0) {
-            _pam_log (LOG_ERR, "TACACS+ server unavailable");
-
-            /* we need to return PAM_AUTHINFO_UNAVAIL here, rather than
-             * PAM_AUTH_ERR, or we can't use "ignore" in the pam configuration
-             */
-            status = PAM_AUTHINFO_UNAVAIL;
-        }
-        else {
-             if(status) /*  not an error if no server */
-                _pam_log (LOG_ERR, "TACACS+ server connect error=%d", status);
-             status = PAM_SUCCESS; /* match tacplus usage in pam.d auth */
-        }
+    tac_free_attrib(&attr_s);
+    if(active_server.addr == NULL || tac_fd < 0) {
+        /* we need to return PAM_AUTHINFO_UNAVAIL here, rather than
+         * PAM_AUTH_ERR, or we can't use "ignore" in the pam configuration
+         */
+        status = PAM_AUTHINFO_UNAVAIL;
         goto cleanup;
     }
 
-    if(arep.status != AUTHOR_STATUS_PASS_ADD &&
-        arep.status != AUTHOR_STATUS_PASS_REPL) {
-
-        _pam_log (LOG_ERR, "TACACS+ authorisation failed for [%s]", user);
-        status = PAM_PERM_DENIED;
+    if(status) {
+        if (ctrl & PAM_TAC_DEBUG)
+            _pam_log(LOG_NOTICE, "No TACACS mapping for %s after auth failure",
+                user);
         goto cleanup;
     }
 
     if (ctrl & PAM_TAC_DEBUG)
         syslog(LOG_DEBUG, "%s: user [%s] successfully authorized", __func__,
             user);
-
-    status = PAM_SUCCESS;
 
     attr = arep.attr;
     while (attr != NULL)  {
@@ -830,32 +839,8 @@ int pam_sm_acct_mgmt (pam_handle_t * pamh, int flags,
         attr = attr->next;
     }
 
-    if (update_mapuser(user, priv_level, r_addr)) {
-        /*
-         * if we mapped the user name, set SUDO_PROMPT in env so that
-         * it prompts as the login user, not the mapped user, unless (unlikely)
-         * the prompt has already been set.  Set SUDO_USER as well, for
-         * consistency.
-         */
-        if (!pam_getenv(pamh, "SUDO_PROMPT")) {
-            char nprompt[strlen("SUDO_PROMPT=[sudo] password for ") +
-                strlen(user) + 3]; /* + 3 for ": " and the \0 */
-            snprintf(nprompt, sizeof nprompt,
-                "SUDO_PROMPT=[sudo] password for %s: ", user);
-            if (pam_putenv(pamh, nprompt) != PAM_SUCCESS)
-                _pam_log(LOG_NOTICE, "failed to set PAM sudo prompt (%s)",
-                    nprompt);
-        }
-        if (!pam_getenv(pamh, "SUDO_USER")) {
-            char sudouser[strlen("SUDO_USER=") +
-                strlen(user) + 1]; /* + 1 for the \0 */
-            snprintf(sudouser, sizeof sudouser,
-                "SUDO_USER=%s", user);
-            if (pam_putenv(pamh, sudouser) != PAM_SUCCESS)
-                _pam_log(LOG_NOTICE, "failed to set PAM sudo user (%s)",
-                    sudouser);
-        }
-    }
+    update_mapped(pamh, user, priv_level, r_addr);
+
 
 cleanup:
     /* free returned attributes */
@@ -865,8 +850,11 @@ cleanup:
     if(arep.msg != NULL)
         free (arep.msg);
 
-    if(tac_fd >= 0)
+    if(tac_fd >= 0) {
+        active_server.addr = NULL;
         close(tac_fd);
+        tac_fd = -1;
+    }
 
     return status;
 }    /* pam_sm_acct_mgmt */
@@ -915,7 +903,7 @@ int pam_sm_close_session (pam_handle_t * pamh, int flags,
 
     task_id = session_taskid; /* task_id must match start */
     rc = _pam_account(pamh, argc, argv, TAC_PLUS_ACCT_FLAG_STOP, NULL); 
-    __update_loguid(user, NULL, NULL); /* now dead */
+    __update_loguid(user); /* now dead, cleanup mapping */
     return rc;
 }    /* pam_sm_close_session */
 

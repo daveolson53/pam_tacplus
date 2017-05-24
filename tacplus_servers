@@ -18,3 +18,17 @@ timeout=10
 
 #secret=tacacskey
 #server=192.168.0.30
+
+# If the management network is in a vrf, set this variable to the vrf name.
+# This would usually be "mgmt"
+# When this variable is set, the connection to the TACACS+ accounting servers
+# will be made through the named vrf.
+#vrf=mgmt
+
+# If user_homedir=1, then tacacs users will be set to have a home directory
+# based on their login name, rather than the mapped tacacsN home directory.
+# mkhomedir_helper is used to create the directory if it does not exist (similar
+# to use of pam_mkhomedir.so).   This flag is ignored for users with restricted
+# shells, e.g., users mapped to a tacacs privilege level that has enforced
+# per-command authorization (see the tacplus-restrict man page).
+# user_homedir=1

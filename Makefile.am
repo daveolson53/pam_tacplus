@@ -14,7 +14,7 @@ bin_PROGRAMS = tacc
 tacc_SOURCES = tacc.c
 tacc_CFLAGS = $(AM_CFLAGS) -I $(top_srcdir)/libtac/include
 tacc_LDFLAGS = -L.libs -ltac $(OPENSSL_LIBS)
-dist_man_MANS = tacc.1
+dist_man_MANS = tacc.1 tacplus_servers.5
 
 
 # This applies to all the libs, but it should only be for pam_tacplus.so

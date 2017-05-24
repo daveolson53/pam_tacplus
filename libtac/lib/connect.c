@@ -41,8 +41,9 @@ int tac_timeout = 5;
  * return value:
  *   >= 0 : valid fd
  *   <  0 : error status code, see LIBTAC_STATUS_...
+ *   iface is used to bind to an interface or VRF if non-null
  */
-int tac_connect(struct addrinfo **server, char **key, int servers) {
+int tac_connect(struct addrinfo **server, char **key, int servers, char *iface) {
     int tries;
     int fd=-1;
 
@@ -50,7 +51,7 @@ int tac_connect(struct addrinfo **server, char **key, int servers) {
         TACSYSLOG((LOG_ERR, "%s: no TACACS+ servers defined", __func__))
     } else {
         for ( tries = 0; tries < servers; tries++ ) {   
-            if((fd=tac_connect_single(server[tries], key[tries], NULL)) >= 0 ) {
+            if((fd=tac_connect_single(server[tries], key[tries], NULL, iface)) >= 0 ) {
                 /* tac_secret was set in tac_connect_single on success */
                 break;
             }
@@ -66,8 +67,11 @@ int tac_connect(struct addrinfo **server, char **key, int servers) {
 /* return value:
  *   >= 0 : valid fd
  *   <  0 : error status code, see LIBTAC_STATUS_...
+ *   If iface is non-null, try to BIND to that interface, to support
+ *   specific routing, including VRF.
  */
-int tac_connect_single(struct addrinfo *server, const char *key, struct addrinfo *srcaddr) {
+int tac_connect_single(struct addrinfo *server, const char *key, 
+    struct addrinfo *srcaddr, char *iface) {
     int retval = LIBTAC_STATUS_CONN_ERR; /* default retval */
     int fd = -1;
     int flags, rc;
@@ -90,6 +94,14 @@ int tac_connect_single(struct addrinfo *server, const char *key, struct addrinfo
             strerror(errno)))
         retval = LIBTAC_STATUS_CONN_ERR;
         goto error;
+    }
+
+    if (iface) {
+        /*  do not fail if the bind fails, connection may still succeed */
+        if (setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, iface,
+            strlen(iface)+1) < 0)
+            TACSYSLOG((LOG_WARNING, "%s: Binding socket to device %s failed: %m",
+                __func__, iface))
     }
 
     /* get flags for restoration later */
@@ -181,7 +193,7 @@ int tac_connect_single(struct addrinfo *server, const char *key, struct addrinfo
     }
 
 error:
-    if (retval < 0) /*  we had an error, don't leak fd */
+    if (retval < 0 && fd >= 0) /*  we had an error, don't leak fd */
         close(fd);
     TACDEBUG((LOG_DEBUG, "%s: exit status=%d (fd=%d)",\
         __func__, retval < 0 ? retval:0, fd))

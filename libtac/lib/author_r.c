@@ -52,11 +52,17 @@ int tac_author_read(int fd, struct areply *re) {
     bzero(re, sizeof(struct areply));
     if (tac_readtimeout_enable &&
         tac_read_wait(fd,tac_timeout*1000,TAC_PLUS_HDR_SIZE,&timeleft) < 0 ) {
-
-        TACSYSLOG((LOG_ERR,\
-            "%s: reply timeout after %d secs", __func__, tac_timeout))
+        if (timeleft > 0) {
+            TACSYSLOG((LOG_ERR,\
+                "%s: reply error, connection closed", __func__))
+            re->status = LIBTAC_STATUS_CONN_CLOSED;
+        }
+        else {
+            TACSYSLOG((LOG_ERR,\
+                "%s: reply timeout after %d secs", __func__, tac_timeout))
+            re->status = LIBTAC_STATUS_READ_TIMEOUT;
+        }
         re->msg = tac_xstrdup(author_syserr_msg);
-        re->status = LIBTAC_STATUS_READ_TIMEOUT;
         free(tb);
         return re->status;
     }
@@ -65,11 +71,11 @@ int tac_author_read(int fd, struct areply *re) {
     if(packet_read < TAC_PLUS_HDR_SIZE) {
         if (packet_read < 0)
             TACSYSLOG((LOG_ERR,\
-                "%s: short reply header, read %ld of %d", __func__,\
-                packet_read, TAC_PLUS_HDR_SIZE))
+                "%s: reply header read error: %m", __func__))
         else
             TACSYSLOG((LOG_ERR,\
-                "%s: reply header read error: %m", __func__))
+                "%s: short reply header, read %ld of %d", __func__,\
+                packet_read, TAC_PLUS_HDR_SIZE))
         re->msg = tac_xstrdup(author_syserr_msg);
         re->status = LIBTAC_STATUS_SHORT_HDR;
         free(tb);
@@ -100,20 +106,30 @@ int tac_author_read(int fd, struct areply *re) {
 
     /* read reply packet body */
     if (tac_readtimeout_enable &&
-        tac_read_wait(fd,timeleft,len_from_header,NULL) < 0 ) {
-
-        TACSYSLOG((LOG_ERR,\
-            "%s: reply timeout after %d secs", __func__, tac_timeout))
+        tac_read_wait(fd,timeleft,len_from_header,&timeleft) < 0 ) {
+        if (timeleft > 0) {
+            TACSYSLOG((LOG_ERR,\
+                "%s: reply error, connection closed", __func__))
+            re->status = LIBTAC_STATUS_CONN_CLOSED;
+        }
+        else {
+            TACSYSLOG((LOG_ERR,\
+                "%s: reply timeout after %d secs", __func__, tac_timeout))
+            re->status = LIBTAC_STATUS_READ_TIMEOUT;
+        }
         re->msg = tac_xstrdup(author_syserr_msg);
-        re->status = LIBTAC_STATUS_READ_TIMEOUT;
         free(tb);
         return re->status;
     }
     packet_read = read(fd, tb, len_from_header);
     if (packet_read < len_from_header) {
-        TACSYSLOG((LOG_ERR,\
-            "%s: short reply body, read %ld of %d", __func__,\
-            packet_read, len_from_header))
+        if (packet_read < 0)
+            TACSYSLOG((LOG_ERR,\
+                "%s: reply body read error: %m", __func__))
+        else
+            TACSYSLOG((LOG_ERR,\
+                "%s: short reply body, read %ld of %d", __func__,\
+                packet_read, len_from_header))
         re->msg = tac_xstrdup(author_syserr_msg);
         re->status = LIBTAC_STATUS_SHORT_BODY;
         free(tb);
