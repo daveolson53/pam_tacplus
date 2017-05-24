@@ -1,6 +1,6 @@
 /* attrib.c - Procedures for handling internal list of attributes
- *               for accounting and authorization functions. 
- * 
+ *               for accounting and authorization functions.
+ *
  * Copyright (C) 2010, Pawel Krawczyk <pawel.krawczyk@hush.com> and
  * Jeroen Nijhof <jeroen@jeroennijhof.nl>
  *
@@ -32,7 +32,7 @@ void tac_add_attrib_pair(struct tac_attrib **attr, char *name, char sep, char *v
     u_char l1 = (u_char) strlen(name);
     u_char l2;
     int total_len;
-    
+
     if (value == NULL) {
         l2 = 0;
     } else {
@@ -46,7 +46,7 @@ void tac_add_attrib_pair(struct tac_attrib **attr, char *name, char sep, char *v
             __func__, name))
         return;
     }
-    
+
     /* initialize the list if application passed us a null pointer */
     if(*attr == NULL) {
         *attr = (struct tac_attrib *) tac_xcalloc(1, sizeof(struct tac_attrib));
@@ -58,7 +58,7 @@ void tac_add_attrib_pair(struct tac_attrib **attr, char *name, char sep, char *v
             a = a->next; /* a holds last allocated block */
 
         a->next = (struct tac_attrib *) tac_xcalloc(1,
-            sizeof(struct tac_attrib)); 
+            sizeof(struct tac_attrib));
         a = a->next; /* set current block pointer to the new one */
     }
 
@@ -87,7 +87,7 @@ void tac_free_attrib(struct tac_attrib **attr) {
 
     b = *attr;
     *attr = NULL;
-    
+
     /* find last allocated block */
     do {
         a = b;

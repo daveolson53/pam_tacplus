@@ -1,5 +1,5 @@
 /* cont_s.c - Send continue request to the server.
- * 
+ *
  * Copyright (C) 2010, Jeroen Nijhof <jeroen@jeroennijhof.nl>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -84,8 +84,8 @@ int tac_cont_send_seq(int fd, char *pass, int seq) {
         free(pkt);
         free(th);
         return LIBTAC_STATUS_ASSEMBLY_ERR;
-    } 
-    
+    }
+
     /* encrypt the body */
     _tac_crypt(pkt, th, bodylength);
 

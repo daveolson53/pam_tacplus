@@ -1,5 +1,5 @@
 /* acct_s.c - Send accounting event information to server.
- * 
+ *
  * Copyright (C) 2010, Pawel Krawczyk <pawel.krawczyk@hush.com> and
  * Jeroen Nijhof <jeroen@jeroennijhof.nl>
  *
@@ -70,7 +70,7 @@ int tac_acct_send(int fd, int type, const char *user, char *tty,
         __func__, user, tty, r_addr, \
         (tac_encryption) ? "yes" : "no", \
         tac_acct_flag2str(type)))
-        
+
     user_len=(u_char) strlen(user);
     port_len=(u_char) strlen(tty);
     r_addr_len=(u_char) strlen(r_addr);
@@ -109,7 +109,7 @@ int tac_acct_send(int fd, int type, const char *user, char *tty,
         /* see comments in author_s.c
         pktp=pkt + pkt_len;
         pkt_len += sizeof(a->attr_len);
-        pkt = tac_xrealloc(pkt, pkt_len);   
+        pkt = tac_xrealloc(pkt, pkt_len);
         */
 
         bcopy(&a->attr_len, pkt + pktl, sizeof(a->attr_len));
@@ -160,7 +160,7 @@ int tac_acct_send(int fd, int type, const char *user, char *tty,
         free(th);
         return LIBTAC_STATUS_WRITE_ERR;
     }
-        
+
     /* encrypt packet body  */
     _tac_crypt(pkt, th, pkt_len);
 

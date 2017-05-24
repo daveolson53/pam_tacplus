@@ -1,5 +1,5 @@
 /* hdr_check.c - Perform basic sanity checks on received packet.
- * 
+ *
  * Copyright (C) 2010, Pawel Krawczyk <pawel.krawczyk@hush.com> and
  * Jeroen Nijhof <jeroen@jeroennijhof.nl>
  *
@@ -45,6 +45,6 @@ char *_tac_check_header(HDR *th, int type) {
             __func__, ntohl(th->session_id), session_id))
         return protocol_err_msg;
     } */
-    
-    return NULL; /* header is ok */    
+
+    return NULL; /* header is ok */
 } /* check header */

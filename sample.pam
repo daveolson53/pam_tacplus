@@ -9,7 +9,7 @@
 # responding tacacs+ servers.  See the README file in the source for more
 # details.
 # An alternative tp service=ppp protocol=lcp for account and session would be
-#   login=login service=shell protocol=ssh 
+#   login=login service=shell protocol=ssh
 # Common parameters can also be set in /etc/tacplus_servers, rather than
 # the commandline by using the include=/etc/tacplus_servers paramter.
 # For the secret parameter, this also improves security

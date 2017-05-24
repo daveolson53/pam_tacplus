@@ -415,7 +415,7 @@ int _pam_parse (int argc, const char **argv) {
 
     return ctrl;
 }    /* _pam_parse */
-    
+
 
 /*
  * when login is successful (from pam account entry point, after authorization

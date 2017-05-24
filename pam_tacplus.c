@@ -233,7 +233,7 @@ int _pam_account(pam_handle_t *pamh, int argc, const char **argv,
 }
 
 
-/* 
+/*
  * Talk to the server for authentication
  */
 static int tac_auth_converse(int ctrl, int fd, int *sptr,
@@ -309,11 +309,11 @@ static int tac_auth_converse(int ctrl, int fd, int *sptr,
             if (NULL != conv_msg.msg) {
                 int retval = -1;
                 int echo_off = (0x1 == (re.flags & 0x1));
-                
+
                 conv_msg.msg_style = echo_off ? PAM_PROMPT_ECHO_OFF : PAM_PROMPT_ECHO_ON;
                 retval = converse(pamh, 1, &conv_msg, &resp);
                 if (PAM_SUCCESS == retval) {
-                    if (PAM_TAC_DEBUG == (ctrl & PAM_TAC_DEBUG)) 
+                    if (PAM_TAC_DEBUG == (ctrl & PAM_TAC_DEBUG))
                         syslog(LOG_DEBUG, "sent msg=\"%s\", resp=\"%s\"",
                                conv_msg.msg, resp->resp);
 
@@ -331,7 +331,7 @@ static int tac_auth_converse(int ctrl, int fd, int *sptr,
                     status = PAM_AUTH_ERR;
                 }
             }
-            else { 
+            else {
                 syslog(LOG_ERR, "GETDATA response with no message, returning PAM_AUTH_ERR");
 
                 status = PAM_AUTH_ERR;
@@ -412,14 +412,14 @@ static int tac_auth_converse(int ctrl, int fd, int *sptr,
        free(resp->resp);
        free(resp);
     }
-       
+
     if (NULL != re.msg);
         free(re.msg);
 
     return ret;
 }
 
-/* 
+/*
  * Only acct and auth now; should handle all the cases here
  * Talk to the tacacs server for each type of transaction conversation
  */
@@ -562,7 +562,7 @@ static int do_tac_connect(int ctrl, int *tacfd, char *user, char *pass,
         find_tac_server(ctrl, &fd, user, pass, tty, r_addr, attr, &status,
             reply, pamh);
     }
-    else { /* connect to the already chosen server, so we get 
+    else { /* connect to the already chosen server, so we get
             * consistent results.  */
         if (ctrl & PAM_TAC_DEBUG)
             syslog(LOG_DEBUG, "%s: use previous server %s", __func__,
@@ -572,7 +572,7 @@ static int do_tac_connect(int ctrl, int *tacfd, char *user, char *pass,
             __vrfname);
         if (fd < 0)
             _pam_log(LOG_ERR, "reconnect failed: %m");
-        else 
+        else
             talk_tac_server(ctrl, fd, user, pass, tty, r_addr, attr, &status,
                 reply, pamh);
     }
@@ -902,7 +902,7 @@ int pam_sm_close_session (pam_handle_t * pamh, int flags,
     _pam_get_user(pamh, &user);
 
     task_id = session_taskid; /* task_id must match start */
-    rc = _pam_account(pamh, argc, argv, TAC_PLUS_ACCT_FLAG_STOP, NULL); 
+    rc = _pam_account(pamh, argc, argv, TAC_PLUS_ACCT_FLAG_STOP, NULL);
     __update_loguid(user); /* now dead, cleanup mapping */
     return rc;
 }    /* pam_sm_close_session */
@@ -938,7 +938,7 @@ int pam_sm_chauthtok(pam_handle_t * pamh, int flags,
     } else {
         pass = strdup("");
     }
-    
+
     _pam_get_user(pamh, &user);
     if (user == NULL) {
         if(pass) {
@@ -946,7 +946,7 @@ int pam_sm_chauthtok(pam_handle_t * pamh, int flags,
         }
         return PAM_USER_UNKNOWN;
     }
-    
+
     if (ctrl & PAM_TAC_DEBUG)
         syslog(LOG_DEBUG, "%s: user [%s] obtained", __func__, user);
 

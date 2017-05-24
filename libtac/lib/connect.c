@@ -1,5 +1,5 @@
 /* connect.c - Open connection to server.
- * 
+ *
  * Copyright (C) 2010, Pawel Krawczyk <pawel.krawczyk@hush.com> and
  * Jeroen Nijhof <jeroen@jeroennijhof.nl>
  *
@@ -50,7 +50,7 @@ int tac_connect(struct addrinfo **server, char **key, int servers, char *iface) 
     if(servers == 0 || server == NULL) {
         TACSYSLOG((LOG_ERR, "%s: no TACACS+ servers defined", __func__))
     } else {
-        for ( tries = 0; tries < servers; tries++ ) {   
+        for ( tries = 0; tries < servers; tries++ ) {
             if((fd=tac_connect_single(server[tries], key[tries], NULL, iface)) >= 0 ) {
                 /* tac_secret was set in tac_connect_single on success */
                 break;
@@ -70,7 +70,7 @@ int tac_connect(struct addrinfo **server, char **key, int servers, char *iface) 
  *   If iface is non-null, try to BIND to that interface, to support
  *   specific routing, including VRF.
  */
-int tac_connect_single(struct addrinfo *server, const char *key, 
+int tac_connect_single(struct addrinfo *server, const char *key,
     struct addrinfo *srcaddr, char *iface) {
     int retval = LIBTAC_STATUS_CONN_ERR; /* default retval */
     int fd = -1;
@@ -176,7 +176,7 @@ int tac_connect_single(struct addrinfo *server, const char *key,
     }
     if(fcntl(fd, F_SETFL, flags) == -1) {
         TACSYSLOG((LOG_ERR, "%s: cannot restore socket flags: %m",\
-             __func__)) 
+             __func__))
         retval = LIBTAC_STATUS_CONN_ERR;
         goto error;
     }
@@ -214,7 +214,7 @@ char *tac_ntop(const struct sockaddr *sa) {
             inet_ntop(AF_INET, &(((struct sockaddr_in *)sa)->sin_addr),
                 server_address, INET_ADDRSTRLEN);
 
-            snprintf(server_address + strlen(server_address), 14, ":%hu", 
+            snprintf(server_address + strlen(server_address), 14, ":%hu",
                 htons(((struct sockaddr_in *)sa)->sin_port));
             break;
 

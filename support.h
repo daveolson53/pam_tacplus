@@ -1,5 +1,5 @@
 /* support.h - support functions for pam_tacplus.c
- * 
+ *
  * Copyright (C) 2010, Pawel Krawczyk <pawel.krawczyk@hush.com> and
  * Jeroen Nijhof <jeroen@jeroennijhof.nl>
  *

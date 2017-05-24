@@ -1,5 +1,5 @@
 /* author_r.c - Reads authorization reply from the server.
- * 
+ *
  * Copyright (C) 2010, Pawel Krawczyk <pawel.krawczyk@hush.com> and
  * Jeroen Nijhof <jeroen@jeroennijhof.nl>
  *
@@ -23,7 +23,7 @@
 #include "libtac.h"
 #include "messages.h"
 
-/* This function returns structure containing 
+/* This function returns structure containing
     1. status (granted/denied)
     2. message for the user
     3. list of attributes returned by server
@@ -149,7 +149,7 @@ int tac_author_read(int fd, struct areply *re) {
      */
     len_from_body = TAC_AUTHOR_REPLY_FIXED_FIELDS_SIZE +
         tb->msg_len + tb->data_len;
-        
+
     pktp = (u_char *) tb + TAC_AUTHOR_REPLY_FIXED_FIELDS_SIZE;
 
     /* cycle through the arguments supplied in the packet */
@@ -167,7 +167,7 @@ int tac_author_read(int fd, struct areply *re) {
         len_from_body += *pktp; /* add arg length itself */
         pktp++;
     }
-    
+
     if(len_from_header != len_from_body) {
         TACSYSLOG((LOG_ERR,\
             "%s: inconsistent reply body, incorrect key?",\
@@ -194,7 +194,7 @@ int tac_author_read(int fd, struct areply *re) {
         char *smsg=(char *) tac_xcalloc(1, tb->data_len+1);
         bcopy((u_char *) tb + TAC_AUTHOR_REPLY_FIXED_FIELDS_SIZE
             + (tb->arg_cnt)*sizeof(u_char)
-            + tb->msg_len, smsg, 
+            + tb->msg_len, smsg,
             tb->data_len);
         smsg[(int) tb->data_len] = '\0';
         TACSYSLOG((LOG_ERR, "%s: reply message: %s", __func__,smsg))
@@ -213,11 +213,11 @@ int tac_author_read(int fd, struct areply *re) {
 
         case TAC_PLUS_AUTHOR_STATUS_PASS_ADD:
             {
-                u_char *argp; 
+                u_char *argp;
 
                 if(!re->msg) re->msg=tac_xstrdup(author_ok_msg);
                     re->status=tb->status;
-            
+
                 /* add attributes received to attribute list returned to
                    the client */
                 pktp = (u_char *) tb + TAC_AUTHOR_REPLY_FIXED_FIELDS_SIZE;
@@ -231,7 +231,7 @@ int tac_author_read(int fd, struct areply *re) {
                     char *sep;
                     char *value;
                     char sepchar = '=';
-                    
+
                     bcopy(argp, buff, (int)*pktp);
                     buff[(int)*pktp] = '\0';
                     sep = strchr(buff, '=');
@@ -255,7 +255,7 @@ int tac_author_read(int fd, struct areply *re) {
                 TACDEBUG((LOG_DEBUG, "Adding buf/value pair (%s,%s)", buff, value));
                 tac_add_attrib_pair(&re->attr, buff, sepchar, value);
                 argp += *pktp;
-                pktp++; 
+                pktp++;
             }
         }
         free(tb);
@@ -266,12 +266,12 @@ int tac_author_read(int fd, struct areply *re) {
     switch (tb->status) {
         /* authorization failure conditions */
         /* failing to follow is allowed by RFC, page 23  */
-        case TAC_PLUS_AUTHOR_STATUS_FOLLOW: 
+        case TAC_PLUS_AUTHOR_STATUS_FOLLOW:
         case TAC_PLUS_AUTHOR_STATUS_FAIL:
             if(!re->msg) re->msg = tac_xstrdup(author_fail_msg);
             re->status=TAC_PLUS_AUTHOR_STATUS_FAIL;
             break;
-        /* error conditions */  
+        /* error conditions */
         case TAC_PLUS_AUTHOR_STATUS_ERROR:
         default:
             if(!re->msg) re->msg = tac_xstrdup(author_err_msg);

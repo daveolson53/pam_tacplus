@@ -1,5 +1,5 @@
 /* author_s.c - Send authorization request to the server.
- * 
+ *
  * Copyright (C) 2010, Pawel Krawczyk <pawel.krawczyk@hush.com> and
  * Jeroen Nijhof <jeroen@jeroennijhof.nl>
  *
@@ -56,7 +56,7 @@ int tac_author_send(int fd, const char *user, char *tty, char *r_addr,
     TACDEBUG((LOG_DEBUG, "%s: user '%s', tty '%s', rem_addr '%s', encrypt: %s", \
         __func__, user, \
         tty, r_addr, tac_encryption ? "yes" : "no"))
-    
+
     user_len = (u_char) strlen(user);
     port_len = (u_char) strlen(tty);
     r_addr_len = (u_char) strlen(r_addr);
@@ -134,7 +134,7 @@ int tac_author_send(int fd, const char *user, char *tty, char *r_addr,
         free(th);
         return LIBTAC_STATUS_WRITE_ERR;
     }
-    
+
     /* encrypt packet body  */
     _tac_crypt(pkt, th, pkt_len);
 

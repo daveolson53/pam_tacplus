@@ -1,5 +1,5 @@
 /* tacplus.h
- * 
+ *
  * Copyright (C) 2010, Pawel Krawczyk <pawel.krawczyk@hush.com> and
  * Jeroen Nijhof <jeroen@jeroennijhof.nl>
  *
@@ -57,7 +57,7 @@ struct tac_plus_pak_hdr {
 
 typedef struct tac_plus_pak_hdr HDR;
 
-/* Authentication packet NAS sends to us */ 
+/* Authentication packet NAS sends to us */
 struct authen_start {
     u_char action;
 
@@ -102,7 +102,7 @@ struct authen_start {
 
 #define TAC_AUTHEN_START_FIXED_FIELDS_SIZE 8
 
-/* Authentication continue packet NAS sends to us */ 
+/* Authentication continue packet NAS sends to us */
 struct authen_cont {
     u_short user_msg_len;
     u_short user_data_len;
@@ -114,7 +114,7 @@ struct authen_cont {
 
 #define TAC_AUTHEN_CONT_FIXED_FIELDS_SIZE 5
 
-/* Authentication reply packet we send to NAS */ 
+/* Authentication reply packet we send to NAS */
 struct authen_reply {
     u_char status;
 
@@ -124,7 +124,7 @@ struct authen_reply {
 #define TAC_PLUS_AUTHEN_STATUS_GETUSER 0x04
 #define TAC_PLUS_AUTHEN_STATUS_GETPASS 0x05
 #define TAC_PLUS_AUTHEN_STATUS_RESTART 0x06
-#define TAC_PLUS_AUTHEN_STATUS_ERROR   0x07 
+#define TAC_PLUS_AUTHEN_STATUS_ERROR   0x07
 #define TAC_PLUS_AUTHEN_STATUS_FOLLOW  0x21
 
     u_char flags;
@@ -164,7 +164,7 @@ struct acct {
 #define TAC_PLUS_ACCT_FLAG_START    0x02
 #define TAC_PLUS_ACCT_FLAG_STOP     0x04
 #define TAC_PLUS_ACCT_FLAG_WATCHDOG 0x08
-	    
+
     u_char authen_method;
     u_char priv_lvl;
     u_char authen_type;
