@@ -463,8 +463,8 @@ static void talk_tac_server(int ctrl, int fd, char *user, char *pass,
             *sptr = PAM_PERM_DENIED;
             _pam_log (LOG_ERR, "TACACS+ authorization failed for [%s] (status=%d)",
                 user, arep.status);
-            if(arep.msg != NULL)
-                free (arep.msg);
+            if(arep.msg != NULL && !reply)
+                free (arep.msg); /*  if reply is set, caller will free */
         }
         else  {
             *sptr = PAM_SUCCESS;
