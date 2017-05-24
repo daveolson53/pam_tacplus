@@ -1,5 +1,5 @@
 /* authen_s.c - Send authentication request to the server.
- * 
+ *
  * Copyright (C) 2010, Pawel Krawczyk <pawel.krawczyk@hush.com> and
  * Jeroen Nijhof <jeroen@jeroennijhof.nl>
  *
@@ -72,8 +72,8 @@ int tac_authen_send(int fd, const char *user, char *pass, char *tty,
 
     TACDEBUG((LOG_DEBUG, "%s: user '%s', tty '%s', rem_addr '%s', encrypt: %s", \
         __func__, user, tty, r_addr, \
-        (tac_encryption) ? "yes" : "no"))        
-        
+        (tac_encryption) ? "yes" : "no"))
+
     if (!strcmp(tac_login,"chap")) {
         chal_len = strlen(chal);
         mdp_len = sizeof(u_char) + strlen(pass) + chal_len;
@@ -167,8 +167,8 @@ int tac_authen_send(int fd, const char *user, char *pass, char *tty,
         free(pkt);
         free(th);
         return LIBTAC_STATUS_ASSEMBLY_ERR;
-    } 
-        
+    }
+
     /* encrypt the body */
     _tac_crypt(pkt, th, bodylength);
 

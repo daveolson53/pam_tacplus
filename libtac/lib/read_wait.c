@@ -1,5 +1,5 @@
 /* read_wait.c - Wait for data to read on a fd.
- * 
+ *
  * Copyright (C) 2011, Darren Besler (dbesler@beehive.mb.ca)
  *
  * This program is free software; you can redistribute it and/or modify
@@ -80,7 +80,7 @@ int tac_read_wait(int fd, int timeout, int size, int *time_left) {
 
     gettimeofday(&start, NULL);
 
-    /* setup for read timeout. 
+    /* setup for read timeout.
     *   will use poll() as it provides greatest compatibility
     *   vs setsockopt(SO_RCVTIMEO) which isn't supported on Solaris
     */

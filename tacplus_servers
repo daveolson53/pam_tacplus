@@ -5,7 +5,7 @@
 # file, but typically it's just the TACACS+ server IP address(es) and shared
 # secret(s)
 #
-# This file should normally be mode 600, if you care about the security 
+# This file should normally be mode 600, if you care about the security
 # of your secret key.   When set to mode 600 NSS lookups for TACACS users
 # will only work for tacacs users that are logged in, via the local mapping.
 # For root, lookups will work for any tacacs users, logged in or not.

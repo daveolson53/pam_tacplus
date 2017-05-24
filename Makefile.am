@@ -85,7 +85,7 @@ pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libtac.pc
 
 clean-generic:
-	rm -rf autom4te*.cache 
+	rm -rf autom4te*.cache
 	rm -f *.rej *.orig *.lang
 
 install-data-hook:

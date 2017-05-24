@@ -9,7 +9,7 @@ This PAM module support the following functions:
 * accounting (session management)
 
 All are performed using TACACS+ protocol [1], designed by Cisco Systems.
-This is remote AAA protocol, supported by most Cisco hardware. 
+This is remote AAA protocol, supported by most Cisco hardware.
 A free TACACS+ server is available [2], which I'm using without any
 major problems for about a year. Advantages of TACACS+ is that all
 (unlike RADIUS) packets exchanged with the authentication server are
@@ -182,7 +182,7 @@ Many of them for now :)
 * only subset of TACACS+ protocol is supported; it's enough for most need, though
 * utilize PAM_SERVICE item obtained from PAM for TACACS+ services
 * clean options and configuration code
-		
+
 ### Authors:
 
 Pawel Krawczyk <pawel.krawczyk@hush.com>

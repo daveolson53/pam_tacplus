@@ -1,5 +1,5 @@
 /* crypt.c - TACACS+ encryption related functions
- * 
+ *
  * Copyright (C) 2010, Pawel Krawczyk <pawel.krawczyk@hush.com> and
  * Jeroen Nijhof <jeroen@jeroennijhof.nl>
  *
@@ -32,7 +32,7 @@
 # include "md5.h"
 # ifndef MD5_LBLOCK /*  should be always, since it's in openssl */
 #  define MD5_LBLOCK MD5_LEN
-# endif 
+# endif
 #endif
 
 /* Produce MD5 pseudo-random pad for TACACS+ encryption.
@@ -73,7 +73,7 @@ u_char *_tac_md5_pad(int len, HDR *hdr)  {
             bcopy(pad+((i-1)*MD5_LBLOCK), buf+bp, MD5_LBLOCK);
             bp+=MD5_LBLOCK;
         }
-  
+
 #if defined(HAVE_OPENSSL_MD5_H) && defined(HAVE_LIBCRYPTO)
         MD5_Init(&mdcontext);
         MD5_Update(&mdcontext, buf, bp);
@@ -83,13 +83,13 @@ u_char *_tac_md5_pad(int len, HDR *hdr)  {
         MD5Update(&mdcontext, buf, bp);
         MD5Final(pad+pp, &mdcontext);
 #endif
-   
+
         pp += MD5_LBLOCK;
     }
 
     free(buf);
     return pad;
- 
+
 }    /* _tac_md5_pad */
 
 /* Perform encryption/decryption on buffer. This means simply XORing
@@ -98,15 +98,15 @@ u_char *_tac_md5_pad(int len, HDR *hdr)  {
 void _tac_crypt(u_char *buf, HDR *th, int length) {
     int i;
     u_char *pad;
- 
+
     /* null operation if no encryption requested */
     if((tac_secret != NULL) && (th->encryption == TAC_PLUS_ENCRYPTED_FLAG)) {
         pad = _tac_md5_pad(length, th);
- 
+
         for (i=0; i<length; i++) {
             *(buf+i) ^= pad[i];
         }
-  
+
         free(pad);
     } else {
         TACSYSLOG((LOG_WARNING, "%s: using no TACACS+ encryption", __func__))

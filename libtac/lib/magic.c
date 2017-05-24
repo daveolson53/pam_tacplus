@@ -1,5 +1,5 @@
 /* magic.c - PPP Magic Number routines.
- * 
+ *
  * Copyright (C) 1989 Carnegie Mellon University.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -81,7 +81,7 @@ u_int32_t
 tac_magic()
 {
     static pthread_once_t magic_control = PTHREAD_ONCE_INIT;
-    
+
     pthread_once(&magic_control, &tac_magic_init);
 
     return (u_int32_t)random();

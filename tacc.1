@@ -10,7 +10,7 @@ tacc \- simple TACACS+ client and login program
 [--no-wtmp] [--no-encrypt]
 .PP
 .B tacc
-\fIusername\fR 
+\fIusername\fR
 .SH DESCRIPTION
 .B tacc
 is simple TACACS+ client, designed mainly for two purposes:
@@ -24,13 +24,13 @@ supplied in command line and password read from standard input;
 in this case \fBtacc\fR is working in "dumb" mode and compiled-in
 defaults are used
 .PP
-\fBtacc\fR will run in either command line mode or login mode depending 
+\fBtacc\fR will run in either command line mode or login mode depending
 on parameters passed from command line. When there's only one non-option
 (i.e. not starting with "\-") parameter, \fBtacc\fR will run in login mode.
 Otherwise, it will parse other parameters described below. Any data not
 explicitly set from command line will be set to default, compiled in
 value.
-.SH "COMMAND LINE OPTIONS" 
+.SH "COMMAND LINE OPTIONS"
 Options specifying action to be performed. At least one is required.
 .TP
 .I "\-T, \-\-authenticate"
@@ -108,7 +108,7 @@ and start/stop accounting.
 There are also some limitations in information sent in accounting packets,
 caused by the fact that \fBtacc\fR doesn't perform PPP connection itself,
 but only spawns \fIpppd\fR to handle the PPP protocol. Because of this
-\fBtacc\fR has no idea on how many data was exchanged with the peer. 
+\fBtacc\fR has no idea on how many data was exchanged with the peer.
 
 .SH "EXIT CODE"
 \fBtacc\fR returns the following codes at exit:

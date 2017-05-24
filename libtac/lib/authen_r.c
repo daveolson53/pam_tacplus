@@ -1,5 +1,5 @@
 /* authen_r.c - Read authentication reply from server.
- * 
+ *
  * Copyright (C) 2010, Pawel Krawczyk <pawel.krawczyk@hush.com> and
  * Jeroen Nijhof <jeroen@jeroennijhof.nl>
  *
@@ -86,7 +86,7 @@ int tac_authen_read(int fd, struct areply *re) {
     }
 
     re->seq_no = th.seq_no;
- 
+
     len_from_header = ntohl(th.datalength);
     if (len_from_header > TAC_PLUS_MAX_PACKET_SIZE) {
         TACSYSLOG((LOG_ERR,\
@@ -170,7 +170,7 @@ int tac_authen_read(int fd, struct areply *re) {
         free(tb);
         return re->status;
     }
-        
+
     /* server ask for continue packet with password */
     if (r == TAC_PLUS_AUTHEN_STATUS_GETPASS) {
         TACDEBUG((LOG_DEBUG, "%s: continue packet with password needed", __func__))

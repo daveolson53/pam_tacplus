@@ -1,5 +1,5 @@
 /* libtac.h
- * 
+ *
  * Copyright (C) 2010, Pawel Krawczyk <pawel.krawczyk@hush.com> and
  * Jeroen Nijhof <jeroen@jeroennijhof.nl>
  *
@@ -80,7 +80,7 @@ struct areply {
     int seq_no : 8;
 };
 
-#ifndef TAC_PLUS_MAXSERVERS		
+#ifndef TAC_PLUS_MAXSERVERS
 #define TAC_PLUS_MAXSERVERS 8
 #endif
 
@@ -95,7 +95,7 @@ struct areply {
 #define TAC_PLUS_READ_TIMEOUT  180    /* seconds */
 #define TAC_PLUS_WRITE_TIMEOUT 180    /* seconds */
 
-/* Internal status codes 
+/* Internal status codes
  *   all negative, tacplus status codes are >= 0
  */
 

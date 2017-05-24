@@ -1,5 +1,5 @@
 /* header.c - Create pre-filled header for TACACS+ request.
- * 
+ *
  * Copyright (C) 2010, Pawel Krawczyk <pawel.krawczyk@hush.com> and
  * Jeroen Nijhof <jeroen@jeroennijhof.nl>
  *
@@ -65,7 +65,7 @@ int tac_readtimeout_enable = 0;
 /* Returns pre-filled TACACS+ packet header of given type.
  * 1. you MUST fill th->datalength and th->version
  * 2. you MAY fill th->encryption
- * 3. you are responsible for freeing allocated header 
+ * 3. you are responsible for freeing allocated header
  * By default packet encryption is enabled. The version
  * field depends on the TACACS+ request type and thus it
  * cannot be predefined.
@@ -79,7 +79,7 @@ HDR *_tac_req_header(u_char type, int cont_session) {
     th->type=type;
     th->seq_no=1; /* always 1 for request */
     th->encryption=TAC_PLUS_ENCRYPTED_FLAG;
- 
+
     /* make session_id from pseudo-random number */
     if (!cont_session) {
 #if defined(HAVE_OPENSSL_RAND_H) && defined(HAVE_LIBCRYPTO)
