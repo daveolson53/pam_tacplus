@@ -430,13 +430,6 @@ static void talk_tac_server(int ctrl, int fd, char *user, char *pass,
     if(!pass && attr) {  /* acct, much simpler */
         int retval;
         struct areply arep;
-        if(*tac_protocol) {
-            tac_add_attrib(attr, "protocol", tac_protocol);
-        }
-        else
-            _pam_log (LOG_ERR, "SM: TACACS+ protocol type not configured "
-                "(IGNORED)");
-        tac_add_attrib(attr, "cmd", "");
         retval = tac_author_send(fd, user, tty, r_addr, *attr);
         if(retval < 0) {
             _pam_log (LOG_ERR, "error getting authorization");
@@ -739,13 +732,16 @@ int pam_sm_acct_mgmt (pam_handle_t * pamh, int flags,
     /* checks for specific data required by TACACS+, which should
        be supplied in pam module command line  */
     if(!*tac_service) {
-        _pam_log (LOG_ERR, "SM: TACACS+ service type not configured");
+        _pam_log (LOG_ERR, "TACACS+ service type not configured");
         return PAM_AUTH_ERR;
     }
-
     tac_add_attrib(&attr_s, "service", tac_service);
+
     if(tac_protocol != NULL && tac_protocol[0] != '\0')
           tac_add_attrib(&attr_s, "protocol", tac_protocol);
+    else
+          _pam_log (LOG_ERR, "TACACS+ protocol type not configured (IGNORED)");
+
     tac_add_attrib(&attr_s, "cmd", "");
 
     memset(&arep, 0, sizeof arep);
@@ -757,6 +753,9 @@ int pam_sm_acct_mgmt (pam_handle_t * pamh, int flags,
      * user is not yet authenticated.
      * We only write the mapping entry (if needed) when authorization
      * is succesful.
+     * attr is not used here, but having a non-NULL value is how
+     * talk_tac_server() distinguishes that it is an acct call, vs auth
+     * TODO: use a different mechanism
     */
     status = do_tac_connect(ctrl, &tac_fd, user, NULL, tty, r_addr, &attr_s,
         &arep, pamh);

@@ -28,7 +28,7 @@ ignored by one or more components.
 .I debug=Number
 Output debugging information via syslog(3).
 Debugging is heavy, including passwords. Do not leave debugging enabled on a production switch once you have completed troubleshooting.  Currently most components only check to see if it is non-zero.  Some components will print additional debug if set to
-.B$ 2 .
+.BR 2 .
 .TP
 .I  "server=IP_ADDRESS | HOSTNAME"
 Adds a TACACS+ server to the servers list. Servers will be queried in turn
@@ -77,8 +77,7 @@ the home directory in the mapping accounts in
 (/home/tacacs0 ... /home/tacacs15) are used.
 This is not honored for accounts with restricted shells (when per-command
 authorization is enabled).  When set, if the home directory does not exist, it
-is created with the When set, if the home directory does not exist, it is
-created with the
+is created with the
 .I mkhomedir_helper
 program, in the same manner as pam_mkhomedir.
 .TP

@@ -1,3 +1,8 @@
+libpam-tacplus (1.4.2-2) UNRELEASED; urgency=low
+  * Fixed  protocol and cmd attributes added multiple times
+
+ -- Dave Olson <olson@cumulusnetworks.com>  Thu, 29 Jun 2017 19:47:06 -0700
+
 libpam-tacplus (1.4.2-1) unstable; urgency=low
   * Added user_homedir config variable to allow per-user
     home directories (unless per-command authorization is enabled)
